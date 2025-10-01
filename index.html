@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Daily Site Report</title>
+  <meta name="description" content="Lightweight daily construction report web app. Works on GitHub Pages. Saves to localStorage. Export to JSON or Print to PDF." />
+  <style>
+    :root{
+      --ink:#0e1223; --bg:#0b0f1a; --card:#121826; --muted:#8ea0b5; --brand:#4f8cff; --accent:#22c55e; --warn:#f59e0b; --danger:#ef4444;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0;font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:#e9eef6}
+    a{color:var(--brand)}
+    .wrap{max-width:1100px;margin:0 auto;padding:24px}
+    header{position:sticky;top:0;z-index:5;background:linear-gradient(180deg,rgba(11,15,26,.95),rgba(11,15,26,.75));backdrop-filter:saturate(1.2) blur(6px);border-bottom:1px solid #1f2a44}
+    .top{display:flex;align-items:center;gap:14px;max-width:1100px;margin:0 auto;padding:14px 24px}
+    .logo{width:42px;height:42px;border-radius:12px;background:#0a1222;border:1px solid #203152;display:grid;place-items:center;font-weight:800}
+    h1{font-size:18px;margin:0}
+    .actions{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+    button,.btn{border:1px solid #29406b;background:#16223a;color:#e9eef6;padding:10px 14px;border-radius:10px;cursor:pointer}
+    button:hover,.btn:hover{background:#1a2a49}
+    .btn.primary{background:linear-gradient(180deg,#335ba8,#23437e);border-color:#2a4581}
+    .btn.success{background:linear-gradient(180deg,#2e7d32,#1e5c22);border-color:#2e7d32}
+    .btn.warn{background:linear-gradient(180deg,#b45309,#8a3f07);border-color:#b45309}
+    .btn.ghost{background:transparent;border-color:#2a3b5e}
+    .grid{display:grid;gap:16px;grid-template-columns:repeat(12,1fr)}
+    .card{grid-column:span 12;background:var(--card);border:1px solid #1f2a44;border-radius:16px;padding:16px}
+    .card h2{font-size:16px;margin:0 0 12px 0;color:#cfe1ff}
+    .row{display:grid;grid-template-columns:repeat(12,1fr);gap:12px;margin-bottom:10px}
+    label{font-size:12px;color:var(--muted)}
+    input,select,textarea{width:100%;padding:10px 12px;border-radius:10px;border:1px solid #2a3b5e;background:#0e1527;color:#e9eef6}
+    textarea{min-height:110px;resize:vertical}
+    table{width:100%;border-collapse:collapse}
+    th,td{border:1px solid #263452;padding:8px;text-align:left}
+    th{background:#0f1730;color:#b9cbe7}
+    .tools{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 0}
+    .pill{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border:1px dashed #2a3b5e;border-radius:999px;color:#b9cbe7;font-size:12px}
+    .muted{color:var(--muted);font-size:12px}
+    .danger{color:var(--danger)}
+    .gallery{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+    .gallery img{width:100%;height:90px;object-fit:cover;border-radius:10px;border:1px solid #263452}
+    .kpi{display:flex;gap:16px;flex-wrap:wrap}
+    .kpi .box{flex:1 1 160px;background:#0f1730;border:1px solid #263452;border-radius:12px;padding:12px}
+    .box b{font-size:20px}
+
+    /* Responsive */
+    @media (max-width:900px){
+      .row{grid-template-columns:repeat(6,1fr)}
+      .gallery{grid-template-columns:repeat(3,1fr)}
+    }
+    @media (max-width:600px){
+      .row{grid-template-columns:repeat(2,1fr)}
+      .gallery{grid-template-columns:repeat(2,1fr)}
+    }
+
+    /* Print as PDF */
+    @media print{
+      header,.actions,.tools,.pill,.muted,.btn{display:none !important}
+      body{background:white;color:black}
+      .card{break-inside:avoid;background:white;border:1px solid #ddd}
+      input,select,textarea{background:white;color:black;border:1px solid #ccc}
+      th,td{border-color:#ccc}
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="top">
+      <div class="logo">DR</div>
+      <h1>Daily Site Report</h1>
+      <div class="actions">
+        <button class="btn primary" id="saveBtn">Save Draft</button>
+        <button class="btn" id="newBtn">New</button>
+        <button class="btn" id="exportBtn">Export JSON</button>
+        <label class="btn ghost" for="importFile">Import JSON</label>
+        <input type="file" id="importFile" accept="application/json" hidden>
+        <button class="btn success" id="printBtn">Print / PDF</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="wrap">
+    <section class="grid">
+      <!-- Report Meta -->
+      <div class="card">
+        <h2>Report Info</h2>
+        <div class="row">
+          <div style="grid-column:span 3">
+            <label for="date">Date</label>
+            <input type="date" id="date">
+          </div>
+          <div style="grid-column:span 5">
+            <label for="project">Project</label>
+            <select id="project">
+              <option value="">Select project…</option>
+              <option>Comet Sneads Ferry Apartments</option>
+              <option>Comet Pittsboro</option>
+              <option>Comet Raleigh</option>
+              <option>Comet Greensboro</option>
+              <option>Custom…</option>
+            </select>
+          </div>
+          <div style="grid-column:span 4">
+            <label for="customProject">Custom Project (if needed)</label>
+            <input id="customProject" placeholder="Enter custom project name" />
+          </div>
+        </div>
+        <div class="row">
+          <div style="grid-column:span 3">
+            <label for="weather">Weather (summary)</label>
+            <input id="weather" placeholder="e.g., 78°F, partly cloudy, 5 mph SW" />
+          </div>
+          <div style="grid-column:span 3">
+            <label for="tempRange">Temp Range</label>
+            <input id="tempRange" placeholder="e.g., 70–84°F" />
+          </div>
+          <div style="grid-column:span 3">
+            <label for="precip">Precipitation</label>
+            <input id="precip" placeholder="e.g., 0.1 in" />
+          </div>
+          <div style="grid-column:span 3">
+            <label for="wind">Wind</label>
+            <input id="wind" placeholder="e.g., 8 mph SW" />
+          </div>
+        </div>
+        <div class="kpi">
+          <div class="box"><label>Total Crew</label><div><b id="kpiCrew">0</b></div></div>
+          <div class="box"><label>Vendors On‑Site</label><div><b id="kpiVendors">0</b></div></div>
+          <div class="box"><label>Open Issues</label><div><b id="kpiIssues">0</b></div></div>
+          <div class="box"><label>Inspections</label><div><b id="kpiInsp">0</b></div></div>
+        </div>
+        <div class="tools">
+          <span class="pill">Tip: Print to PDF for a shareable report.</span>
+          <span class="pill">Drafts save per browser (localStorage).</span>
+        </div>
+      </div>
+
+      <!-- Manpower & Vendors -->
+      <div class="card">
+        <h2>Manpower & Vendors</h2>
+        <div class="tools">
+          <button class="btn" id="addLabor">+ Add Row</button>
+          <button class="btn ghost" id="clearLabor">Clear</button>
+        </div>
+        <div style="overflow:auto;margin-top:8px">
+          <table id="laborTable">
+            <thead>
+              <tr>
+                <th>Company / Trade</th>
+                <th>Supervisor</th>
+                <th># Crew</th>
+                <th>Time On</th>
+                <th>Time Off</th>
+                <th>Notes</th>
+                <th>—</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Work Performed -->
+      <div class="card">
+        <h2>Work Performed</h2>
+        <div class="row">
+          <div style="grid-column:span 12">
+            <label for="workPerformed">Summary (by area/trade)</label>
+            <textarea id="workPerformed" placeholder="Example: Bldg 1 – framing 2nd floor; Bldg 2 – MEP rough-ins; Site – irrigation mainline S of Bldg 3; etc."></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- Deliveries -->
+      <div class="card">
+        <h2>Deliveries</h2>
+        <div class="tools">
+          <button class="btn" id="addDelivery">+ Add Delivery</button>
+          <button class="btn ghost" id="clearDelivery">Clear</button>
+        </div>
+        <div style="overflow:auto;margin-top:8px">
+          <table id="deliveryTable">
+            <thead>
+              <tr>
+                <th>Time</th>
+                <th>Vendor</th>
+                <th>Material / Qty</th>
+                <th>For Area</th>
+                <th>Received By</th>
+                <th>—</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Inspections & Tests -->
+      <div class="card">
+        <h2>Inspections & Tests</h2>
+        <div class="tools">
+          <button class="btn" id="addInsp">+ Add Item</button>
+          <button class="btn ghost" id="clearInsp">Clear</button>
+        </div>
+        <div style="overflow:auto;margin-top:8px">
+          <table id="inspTable">
+            <thead>
+              <tr>
+                <th>Agency / Inspector</th>
+                <th>Type</th>
+                <th>Building/Area</th>
+                <th>Status</th>
+                <th>Notes</th>
+                <th>—</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Safety / Incidents -->
+      <div class="card">
+        <h2>Safety</h2>
+        <div class="row">
+          <div style="grid-column:span 6">
+            <label for="safetyObservations">Observations / Toolbox Talks</label>
+            <textarea id="safetyObservations" placeholder="PPE compliance, tailgate topics, near-miss notes, etc."></textarea>
+          </div>
+          <div style="grid-column:span 6">
+            <label for="incidents">Incidents</label>
+            <textarea id="incidents" placeholder="Describe any incidents. If none, write N/A."></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- Delays / Constraints -->
+      <div class="card">
+        <h2>Delays & Constraints</h2>
+        <div class="row">
+          <div style="grid-column:span 12">
+            <label for="delays">Delays / Constraints / RFI Needs</label>
+            <textarea id="delays" placeholder="Inspections pending, utility conflicts, weather holds, approvals needed, etc."></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- Equipment On Site -->
+      <div class="card">
+        <h2>Equipment On‑Site</h2>
+        <div class="tools">
+          <button class="btn" id="addEquip">+ Add Equipment</button>
+          <button class="btn ghost" id="clearEquip">Clear</button>
+        </div>
+        <div style="overflow:auto;margin-top:8px">
+          <table id="equipTable">
+            <thead>
+              <tr>
+                <th>Type</th>
+                <th>Owner</th>
+                <th>Qty</th>
+                <th>Location</th>
+                <th>Notes</th>
+                <th>—</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Photos -->
+      <div class="card">
+        <h2>Photos</h2>
+        <div class="tools">
+          <label class="btn" for="photoInput">+ Add Photos</label>
+          <input type="file" id="photoInput" accept="image/*" multiple hidden>
+          <button class="btn ghost" id="clearPhotos">Clear</button>
+          <span class="muted">(Images save in your browser; large sets may slow down.)</span>
+        </div>
+        <div class="gallery" id="gallery"></div>
+      </div>
+
+      <!-- Sign-off -->
+      <div class="card">
+        <h2>Sign‑Off</h2>
+        <div class="row">
+          <div style="grid-column:span 4">
+            <label for="preparedBy">Prepared By</label>
+            <input id="preparedBy" placeholder="Your name" />
+          </div>
+          <div style="grid-column:span 4">
+            <label for="title">Title</label>
+            <input id="title" placeholder="e.g., Superintendent" />
+          </div>
+          <div style="grid-column:span 4">
+            <label for="preparedAt">Prepared At (time)</label>
+            <input id="preparedAt" type="time" />
+          </div>
+        </div>
+      </div>
+
+      <!-- History -->
+      <div class="card">
+        <h2>Saved Reports (this browser)</h2>
+        <div class="tools">
+          <button class="btn warn" id="wipeAll">Delete All Drafts</button>
+          <span class="muted">(Use Export JSON first if you want a backup!)</span>
+        </div>
+        <div id="history"></div>
+      </div>
+
+    </section>
+  </div>
+
+  <script>
+    // ====== Utilities ======
+    const $ = (sel, root=document) => root.querySelector(sel);
+    const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
+
+    const STORAGE_KEY = 'dailyReportDrafts_v1';
+
+    function uid(){ return Math.random().toString(36).slice(2) + Date.now().toString(36); }
+
+    function getDrafts(){
+      try{ return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }catch(e){ return []; }
+    }
+    function setDrafts(arr){ localStorage.setItem(STORAGE_KEY, JSON.stringify(arr)); }
+
+    function getForm(){
+      const labor = tableToJSON('#laborTable');
+      const deliveries = tableToJSON('#deliveryTable');
+      const inspections = tableToJSON('#inspTable');
+      const equipment = tableToJSON('#equipTable');
+      const photos = $$('#gallery img').map(img => img.src);
+      return {
+        id: currentId || uid(),
+        date: $('#date').value,
+        project: $('#project').value,
+        customProject: $('#customProject').value,
+        weather: $('#weather').value,
+        tempRange: $('#tempRange').value,
+        precip: $('#precip').value,
+        wind: $('#wind').value,
+        workPerformed: $('#workPerformed').value,
+        safetyObservations: $('#safetyObservations').value,
+        incidents: $('#incidents').value,
+        delays: $('#delays').value,
+        preparedBy: $('#preparedBy').value,
+        title: $('#title').value,
+        preparedAt: $('#preparedAt').value,
+        labor, deliveries, inspections, equipment, photos,
+        savedAt: new Date().toISOString()
+      }
+    }
+
+    function setForm(data){
+      $('#date').value = data.date || '';
+      $('#project').value = data.project || '';
+      $('#customProject').value = data.customProject || '';
+      $('#weather').value = data.weather || '';
+      $('#tempRange').value = data.tempRange || '';
+      $('#precip').value = data.precip || '';
+      $('#wind').value = data.wind || '';
+      $('#workPerformed').value = data.workPerformed || '';
+      $('#safetyObservations').value = data.safetyObservations || '';
+      $('#incidents').value = data.incidents || '';
+      $('#delays').value = data.delays || '';
+      $('#preparedBy').value = data.preparedBy || '';
+      $('#title').value = data.title || '';
+      $('#preparedAt').value = data.preparedAt || '';
+      // Tables
+      jsonToTable('#laborTable', data.labor||[]);
+      jsonToTable('#deliveryTable', data.deliveries||[]);
+      jsonToTable('#inspTable', data.inspections||[]);
+      jsonToTable('#equipTable', data.equipment||[]);
+      // Photos
+      $('#gallery').innerHTML = '';
+      (data.photos||[]).forEach(src => addPhotoToGallery(src));
+      updateKPIs();
+    }
+
+    function saveDraft(){
+      const draft = getForm();
+      const drafts = getDrafts();
+      const i = drafts.findIndex(d => d.id === draft.id);
+      if(i>=0) drafts[i] = draft; else drafts.push(draft);
+      setDrafts(drafts);
+      currentId = draft.id;
+      renderHistory();
+      toast('Saved ✅');
+    }
+
+    function loadDraft(id){
+      const drafts = getDrafts();
+      const d = drafts.find(x=>x.id===id);
+      if(!d) return;
+      currentId = id;
+      setForm(d);
+      toast('Draft loaded');
+    }
+
+    function deleteDraft(id){
+      const drafts = getDrafts().filter(x=>x.id!==id);
+      setDrafts(drafts);
+      if(currentId===id){ currentId=null; }
+      renderHistory();
+    }
+
+    function renderHistory(){
+      const drafts = getDrafts().sort((a,b)=> (b.date||'').localeCompare(a.date||''));
+      const el = $('#history');
+      if(!drafts.length){ el.innerHTML = '<p class="muted">No drafts saved yet.</p>'; return; }
+      el.innerHTML = drafts.map(d=>{
+        const title = [d.date||'—', (d.customProject||d.project||'—')].join(' · ');
+        return `<div style="display:flex;gap:10px;align-items:center;margin:8px 0;padding:10px;border:1px solid #2a3b5e;border-radius:10px">
+          <div style="flex:1 1 auto">${title}</div>
+          <button class="btn" data-load="${d.id}">Open</button>
+          <button class="btn ghost danger" data-del="${d.id}">Delete</button>
+        </div>`
+      }).join('');
+      // bind
+      $$('#history [data-load]').forEach(b=> b.onclick = ()=> loadDraft(b.dataset.load));
+      $$('#history [data-del]').forEach(b=> b.onclick = ()=> { if(confirm('Delete this draft?')) deleteDraft(b.dataset.del) });
+    }
+
+    function toast(msg){
+      const t = document.createElement('div');
+      t.textContent = msg;
+      t.style.position='fixed';t.style.right='16px';t.style.bottom='16px';t.style.padding='10px 14px';
+      t.style.background='#0f1730';t.style.border='1px solid #2a3b5e';t.style.borderRadius='10px';
+      t.style.zIndex=99;
+      document.body.appendChild(t);
+      setTimeout(()=> t.remove(), 1600);
+    }
+
+    // ====== Dynamic Tables ======
+    function addRow(tbody, cells){
+      const tr = document.createElement('tr');
+      tr.innerHTML = cells.map((c,i)=> `<td>${c}</td>`).join('') + `<td><button class="btn ghost" data-remove>✕</button></td>`;
+      tbody.appendChild(tr);
+      tr.querySelector('[data-remove]').onclick = ()=> { tr.remove(); updateKPIs(); };
+      tr.querySelectorAll('input,textarea,select').forEach(el=> el.addEventListener('input', updateKPIs));
+    }
+
+    function tableToJSON(sel){
+      const rows = $$(sel+' tbody tr');
+      return rows.map(tr=> Array.from(tr.querySelectorAll('td')).slice(0,-1).map(td=>{
+        const input = td.querySelector('input,textarea,select');
+        return input ? input.value : td.textContent;
+      }));
+    }
+
+    function jsonToTable(sel, rows){
+      const tbody = $(sel+' tbody');
+      tbody.innerHTML='';
+      rows.forEach(r=> addRow(tbody, r.map((v,idx)=> inputForCell(idx, v, sel))));
+    }
+
+    function inputForCell(idx, val, tableSel){
+      // Different columns different inputs
+      const numberCol = (tableSel==='#laborTable' && idx===2) || (tableSel==='#equipTable' && idx===2);
+      return `<input ${numberCol? 'type="number" min="0"':''} value="${val?escapeHtml(val):''}" />`;
+    }
+
+    function escapeHtml(s){
+      return String(s).replace(/[&<>"']/g, m=> ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[m]));
+    }
+
+    // ====== Photos ======
+    function addPhotoToGallery(src){
+      const img = document.createElement('img');
+      img.src = src; $('#gallery').appendChild(img);
+    }
+
+    // ====== KPIs ======
+    function updateKPIs(){
+      const labor = tableToJSON('#laborTable');
+      const totalCrew = labor.reduce((sum,row)=> sum + (parseInt(row[2]||0)||0), 0);
+      $('#kpiCrew').textContent = totalCrew;
+      $('#kpiVendors').textContent = new Set(labor.map(r=> r[0])).size || 0;
+      $('#kpiIssues').textContent = ($('#delays').value.trim() ? 1 : 0) + ($('#incidents').value.trim()?1:0);
+      $('#kpiInsp').textContent = tableToJSON('#inspTable').length;
+    }
+
+    // ====== Event bindings ======
+    let currentId = null;
+
+    // Seed empty rows
+    function seed(){
+      addRow($('#laborTable tbody'), [inputForCell(0,'' ,'#laborTable'), inputForCell(1,'' ,'#laborTable'), inputForCell(2,'','#laborTable'), inputForCell(3,'','#laborTable'), inputForCell(4,'','#laborTable'), inputForCell(5,'','#laborTable')]);
+      addRow($('#deliveryTable tbody'), [inputForCell(0,'' ,'#deliveryTable'), inputForCell(1,'' ,'#deliveryTable'), inputForCell(2,'','#deliveryTable'), inputForCell(3,'','#deliveryTable'), inputForCell(4,'','#deliveryTable')]);
+      addRow($('#inspTable tbody'), [inputForCell(0,'' ,'#inspTable'), inputForCell(1,'' ,'#inspTable'), inputForCell(2,'','#inspTable'), inputForCell(3,'','#inspTable'), inputForCell(4,'','#inspTable')]);
+      addRow($('#equipTable tbody'), [inputForCell(0,'' ,'#equipTable'), inputForCell(1,'' ,'#equipTable'), inputForCell(2,'','#equipTable'), inputForCell(3,'','#equipTable'), inputForCell(4,'','#equipTable')]);
+    }
+
+    // Buttons
+    $('#saveBtn').onclick = saveDraft;
+    $('#newBtn').onclick = ()=> { if(confirm('Clear the form for a new report?')) { currentId=null; document.querySelector('form')?.reset(); setForm({}); seed(); } };
+    $('#exportBtn').onclick = ()=> {
+      const data = getForm();
+      const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      const name = `daily-report_${data.date||'undated'}.json`;
+      a.download = name;
+      a.click();
+    };
+    $('#importFile').addEventListener('change', (e)=>{
+      const file = e.target.files?.[0]; if(!file) return;
+      const r = new FileReader(); r.onload = ()=> {
+        try{ const data = JSON.parse(r.result); currentId = data.id || null; setForm(data); toast('Imported'); }
+        catch(err){ alert('Invalid JSON file'); }
+      }; r.readAsText(file);
+    });
+    $('#printBtn').onclick = ()=> window.print();
+
+    // Table controls
+    $('#addLabor').onclick = ()=> addRow($('#laborTable tbody'), [inputForCell(0,'' ,'#laborTable'), inputForCell(1,'' ,'#laborTable'), inputForCell(2,'','#laborTable'), inputForCell(3,'','#laborTable'), inputForCell(4,'','#laborTable'), inputForCell(5,'','#laborTable')]);
+    $('#clearLabor').onclick = ()=> { if(confirm('Clear labor table?')) { $('#laborTable tbody').innerHTML=''; updateKPIs(); } };
+
+    $('#addDelivery').onclick = ()=> addRow($('#deliveryTable tbody'), [inputForCell(0,'' ,'#deliveryTable'), inputForCell(1,'' ,'#deliveryTable'), inputForCell(2,'','#deliveryTable'), inputForCell(3,'','#deliveryTable'), inputForCell(4,'','#deliveryTable')]);
+    $('#clearDelivery').onclick = ()=> { if(confirm('Clear deliveries?')) { $('#deliveryTable tbody').innerHTML=''; updateKPIs(); } };
+
+    $('#addInsp').onclick = ()=> addRow($('#inspTable tbody'), [inputForCell(0,'' ,'#inspTable'), inputForCell(1,'' ,'#inspTable'), inputForCell(2,'','#inspTable'), inputForCell(3,'','#inspTable'), inputForCell(4,'','#inspTable')]);
+    $('#clearInsp').onclick = ()=> { if(confirm('Clear inspections?')) { $('#inspTable tbody').innerHTML=''; updateKPIs(); } };
+
+    $('#addEquip').onclick = ()=> addRow($('#equipTable tbody'), [inputForCell(0,'' ,'#equipTable'), inputForCell(1,'' ,'#equipTable'), inputForCell(2,'','#equipTable'), inputForCell(3,'','#equipTable'), inputForCell(4,'','#equipTable')]);
+    $('#clearEquip').onclick = ()=> { if(confirm('Clear equipment?')) { $('#equipTable tbody').innerHTML=''; updateKPIs(); } };
+
+    // Photos
+    $('#photoInput').addEventListener('change', (e)=>{
+      const files = Array.from(e.target.files||[]);
+      files.forEach(f=>{
+        const r = new FileReader();
+        r.onload = ()=> addPhotoToGallery(r.result);
+        r.readAsDataURL(f);
+      })
+    });
+    $('#clearPhotos').onclick = ()=> { if(confirm('Clear photos?')) $('#gallery').innerHTML=''; };
+
+    // Live KPI updates
+    $('#delays').addEventListener('input', updateKPIs);
+    $('#incidents').addEventListener('input', updateKPIs);
+
+    // History controls
+    $('#wipeAll').onclick = ()=> { if(confirm('Delete ALL drafts saved in this browser?')) { localStorage.removeItem(STORAGE_KEY); renderHistory(); }}
+
+    // Init
+    (function init(){
+      // Default date/time
+      const today = new Date();
+      $('#date').valueAsDate = today;
+      $('#preparedAt').value = today.toTimeString().slice(0,5);
+      seed();
+      renderHistory();
+      updateKPIs();
+    })();
+  </script>
+</body>
+</html>
