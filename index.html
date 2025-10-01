@@ -342,247 +342,286 @@
     </section>
   </div>
 
-  <script>
-    // ====== Utilities ======
-    const $ = (sel, root=document) => root.querySelector(sel);
-    const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
+ <script>
+  // ====== Utilities ======
+  const $ = (sel, root=document) => root.querySelector(sel);
+  const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
 
-    const STORAGE_KEY = 'dailyReportDrafts_v1';
+  const STORAGE_KEY = 'dailyReportDrafts_v1';
+  let currentId = null;
 
-    function uid(){ return Math.random().toString(36).slice(2) + Date.now().toString(36); }
+  function uid(){ return Math.random().toString(36).slice(2) + Date.now().toString(36); }
 
-    function getDrafts(){
-      try{ return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }catch(e){ return []; }
+  function getDrafts(){
+    try{ return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }catch(e){ return []; }
+  }
+  function setDrafts(arr){ localStorage.setItem(STORAGE_KEY, JSON.stringify(arr)); }
+
+  // ====== Table helpers (event-safe) ======
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, m => (
+      m === '&' ? '&amp;' :
+      m === '<' ? '&lt;'  :
+      m === '>' ? '&gt;'  :
+      m === '"' ? '&quot;': '&#39;'
+    ));
+  }
+
+  function inputForCell(idx, val, tableSel){
+    // number column for crew/qty
+    const numberCol = (tableSel==='#laborTable' && idx===2) || (tableSel==='#equipTable' && idx===2);
+    return `<input ${numberCol? 'type="number" min="0"':''} value="${val?escapeHtml(val):''}" />`;
+  }
+
+  function addRow(tbody, cells){
+    const tr = document.createElement('tr');
+    tr.innerHTML = cells.map((c)=> `<td>${c}</td>`).join('') + `<td><button class="btn ghost" data-remove>✕</button></td>`;
+    tbody.appendChild(tr);
+    updateKPIs();
+  }
+
+  function tableToJSON(sel){
+    const rows = $$(sel+' tbody tr');
+    return rows.map(tr=> Array.from(tr.querySelectorAll('td')).slice(0,-1).map(td=>{
+      const input = td.querySelector('input,textarea,select');
+      return input ? input.value : td.textContent;
+    }));
+  }
+
+  function jsonToTable(sel, rows){
+    const tbody = $(sel+' tbody');
+    tbody.innerHTML='';
+    rows.forEach(r=> addRow(tbody, r.map((v,idx)=> inputForCell(idx, v, sel))));
+  }
+
+  // ====== Form IO ======
+  function getForm(){
+    const labor = tableToJSON('#laborTable');
+    const deliveries = tableToJSON('#deliveryTable');
+    const inspections = tableToJSON('#inspTable');
+    const equipment = tableToJSON('#equipTable');
+    const photos = $$('#gallery img').map(img => img.src);
+    return {
+      id: currentId || uid(),
+      date: $('#date').value,
+      project: $('#project').value,
+      customProject: $('#customProject').value,
+      weather: $('#weather').value,
+      tempRange: $('#tempRange').value,
+      precip: $('#precip').value,
+      wind: $('#wind').value,
+      workPerformed: $('#workPerformed').value,
+      safetyObservations: $('#safetyObservations').value,
+      incidents: $('#incidents').value,
+      delays: $('#delays').value,
+      preparedBy: $('#preparedBy').value,
+      title: $('#title').value,
+      preparedAt: $('#preparedAt').value,
+      labor, deliveries, inspections, equipment, photos,
+      savedAt: new Date().toISOString()
     }
-    function setDrafts(arr){ localStorage.setItem(STORAGE_KEY, JSON.stringify(arr)); }
+  }
 
-    function getForm(){
-      const labor = tableToJSON('#laborTable');
-      const deliveries = tableToJSON('#deliveryTable');
-      const inspections = tableToJSON('#inspTable');
-      const equipment = tableToJSON('#equipTable');
-      const photos = $$('#gallery img').map(img => img.src);
-      return {
-        id: currentId || uid(),
-        date: $('#date').value,
-        project: $('#project').value,
-        customProject: $('#customProject').value,
-        weather: $('#weather').value,
-        tempRange: $('#tempRange').value,
-        precip: $('#precip').value,
-        wind: $('#wind').value,
-        workPerformed: $('#workPerformed').value,
-        safetyObservations: $('#safetyObservations').value,
-        incidents: $('#incidents').value,
-        delays: $('#delays').value,
-        preparedBy: $('#preparedBy').value,
-        title: $('#title').value,
-        preparedAt: $('#preparedAt').value,
-        labor, deliveries, inspections, equipment, photos,
-        savedAt: new Date().toISOString()
+  function setForm(data){
+    $('#date').value = data.date || '';
+    $('#project').value = data.project || '';
+    $('#customProject').value = data.customProject || '';
+    $('#weather').value = data.weather || '';
+    $('#tempRange').value = data.tempRange || '';
+    $('#precip').value = data.precip || '';
+    $('#wind').value = data.wind || '';
+    $('#workPerformed').value = data.workPerformed || '';
+    $('#safetyObservations').value = data.safetyObservations || '';
+    $('#incidents').value = data.incidents || '';
+    $('#delays').value = data.delays || '';
+    $('#preparedBy').value = data.preparedBy || '';
+    $('#title').value = data.title || '';
+    $('#preparedAt').value = data.preparedAt || '';
+    jsonToTable('#laborTable', data.labor||[]);
+    jsonToTable('#deliveryTable', data.deliveries||[]);
+    jsonToTable('#inspTable', data.inspections||[]);
+    jsonToTable('#equipTable', data.equipment||[]);
+    $('#gallery').innerHTML = '';
+    (data.photos||[]).forEach(src => addPhotoToGallery(src));
+    updateKPIs();
+  }
+
+  function saveDraft(){
+    const draft = getForm();
+    const drafts = getDrafts();
+    const i = drafts.findIndex(d => d.id === draft.id);
+    if(i>=0) drafts[i] = draft; else drafts.push(draft);
+    setDrafts(drafts);
+    currentId = draft.id;
+    renderHistory();
+    toast('Saved ✅');
+  }
+
+  function loadDraft(id){
+    const drafts = getDrafts();
+    const d = drafts.find(x=>x.id===id);
+    if(!d) return;
+    currentId = id;
+    setForm(d);
+    toast('Draft loaded');
+  }
+
+  function deleteDraft(id){
+    const drafts = getDrafts().filter(x=>x.id!==id);
+    setDrafts(drafts);
+    if(currentId===id){ currentId=null; }
+    renderHistory();
+  }
+
+  function renderHistory(){
+    const drafts = getDrafts().sort((a,b)=> (b.date||'').localeCompare(a.date||''));
+    const el = $('#history');
+    if(!drafts.length){ el.innerHTML = '<p class="muted">No drafts saved yet.</p>'; return; }
+    el.innerHTML = drafts.map(d=>{
+      const title = [d.date||'—', (d.customProject||d.project||'—')].join(' · ');
+      return `<div style="display:flex;gap:10px;align-items:center;margin:8px 0;padding:10px;border:1px solid #2a3b5e;border-radius:10px">
+        <div style="flex:1 1 auto">${title}</div>
+        <button class="btn" data-load="${d.id}">Open</button>
+        <button class="btn ghost danger" data-del="${d.id}">Delete</button>
+      </div>`
+    }).join('');
+  }
+
+  function toast(msg){
+    const t = document.createElement('div');
+    t.textContent = msg;
+    t.style.position='fixed';t.style.right='16px';t.style.bottom='16px';t.style.padding='10px 14px';
+    t.style.background='#0f1730';t.style.border='1px solid #2a3b5e';t.style.borderRadius='10px';
+    t.style.zIndex=99;
+    document.body.appendChild(t);
+    setTimeout(()=> t.remove(), 1600);
+  }
+
+  // ====== Photos ======
+  function addPhotoToGallery(src){
+    const img = document.createElement('img');
+    img.src = src; $('#gallery').appendChild(img);
+  }
+
+  // ====== KPIs ======
+  function updateKPIs(){
+    const labor = tableToJSON('#laborTable');
+    const totalCrew = labor.reduce((sum,row)=> sum + (parseInt(row[2]||0)||0), 0);
+    $('#kpiCrew').textContent = totalCrew;
+    $('#kpiVendors').textContent = new Set(labor.map(r=> r[0])).size || 0;
+    $('#kpiIssues').textContent = ($('#delays').value.trim() ? 1 : 0) + ($('#incidents').value.trim()?1:0);
+    $('#kpiInsp').textContent = tableToJSON('#inspTable').length;
+  }
+
+  // ====== SAFE BINDINGS with DOMContentLoaded ======
+  document.addEventListener('DOMContentLoaded', () => {
+    try {
+      // Seed empty rows once
+      function seed(){
+        addRow($('#laborTable tbody'), [inputForCell(0,'' ,'#laborTable'), inputForCell(1,'' ,'#laborTable'), inputForCell(2,'','#laborTable'), inputForCell(3,'','#laborTable'), inputForCell(4,'','#laborTable'), inputForCell(5,'','#laborTable')]);
+        addRow($('#deliveryTable tbody'), [inputForCell(0,'' ,'#deliveryTable'), inputForCell(1,'' ,'#deliveryTable'), inputForCell(2,'','#deliveryTable'), inputForCell(3,'','#deliveryTable'), inputForCell(4,'','#deliveryTable')]);
+        addRow($('#inspTable tbody'), [inputForCell(0,'' ,'#inspTable'), inputForCell(1,'' ,'#inspTable'), inputForCell(2,'','#inspTable'), inputForCell(3,'','#inspTable'), inputForCell(4,'','#inspTable')]);
+        addRow($('#equipTable tbody'), [inputForCell(0,'' ,'#equipTable'), inputForCell(1,'' ,'#equipTable'), inputForCell(2,'','#equipTable'), inputForCell(3,'','#equipTable'), inputForCell(4,'','#equipTable')]);
       }
-    }
 
-    function setForm(data){
-      $('#date').value = data.date || '';
-      $('#project').value = data.project || '';
-      $('#customProject').value = data.customProject || '';
-      $('#weather').value = data.weather || '';
-      $('#tempRange').value = data.tempRange || '';
-      $('#precip').value = data.precip || '';
-      $('#wind').value = data.wind || '';
-      $('#workPerformed').value = data.workPerformed || '';
-      $('#safetyObservations').value = data.safetyObservations || '';
-      $('#incidents').value = data.incidents || '';
-      $('#delays').value = data.delays || '';
-      $('#preparedBy').value = data.preparedBy || '';
-      $('#title').value = data.title || '';
-      $('#preparedAt').value = data.preparedAt || '';
-      // Tables
-      jsonToTable('#laborTable', data.labor||[]);
-      jsonToTable('#deliveryTable', data.deliveries||[]);
-      jsonToTable('#inspTable', data.inspections||[]);
-      jsonToTable('#equipTable', data.equipment||[]);
-      // Photos
-      $('#gallery').innerHTML = '';
-      (data.photos||[]).forEach(src => addPhotoToGallery(src));
-      updateKPIs();
-    }
+      // Header buttons
+      $('#saveBtn')?.addEventListener('click', saveDraft);
+      $('#newBtn')?.addEventListener('click', () => {
+        if(confirm('Clear the form for a new report?')){
+          currentId=null;
+          setForm({}); // resets tables + fields
+          seed();
+        }
+      });
+      $('#exportBtn')?.addEventListener('click', () => {
+        const data = getForm();
+        const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `daily-report_${data.date||'undated'}.json`;
+        a.click();
+      });
+      $('#importFile')?.addEventListener('change', (e)=>{
+        const file = e.target.files?.[0]; if(!file) return;
+        const r = new FileReader(); r.onload = ()=>{
+          try{ const data = JSON.parse(r.result); currentId = data.id || null; setForm(data); toast('Imported'); }
+          catch(err){ alert('Invalid JSON file'); }
+        }; r.readAsText(file);
+      });
+      $('#printBtn')?.addEventListener('click', () => window.print());
 
-    function saveDraft(){
-      const draft = getForm();
-      const drafts = getDrafts();
-      const i = drafts.findIndex(d => d.id === draft.id);
-      if(i>=0) drafts[i] = draft; else drafts.push(draft);
-      setDrafts(drafts);
-      currentId = draft.id;
-      renderHistory();
-      toast('Saved ✅');
-    }
+      // Event delegation for table Add/Clear
+      document.body.addEventListener('click', (e) => {
+        const t = e.target;
 
-    function loadDraft(id){
-      const drafts = getDrafts();
-      const d = drafts.find(x=>x.id===id);
-      if(!d) return;
-      currentId = id;
-      setForm(d);
-      toast('Draft loaded');
-    }
+        // Labor
+        if (t.id === 'addLabor') {
+          addRow($('#laborTable tbody'), [inputForCell(0,'' ,'#laborTable'), inputForCell(1,'' ,'#laborTable'), inputForCell(2,'','#laborTable'), inputForCell(3,'','#laborTable'), inputForCell(4,'','#laborTable'), inputForCell(5,'','#laborTable')]);
+        }
+        if (t.id === 'clearLabor') {
+          if(confirm('Clear labor table?')) { $('#laborTable tbody').innerHTML=''; updateKPIs(); }
+        }
 
-    function deleteDraft(id){
-      const drafts = getDrafts().filter(x=>x.id!==id);
-      setDrafts(drafts);
-      if(currentId===id){ currentId=null; }
-      renderHistory();
-    }
+        // Delivery
+        if (t.id === 'addDelivery') {
+          addRow($('#deliveryTable tbody'), [inputForCell(0,'' ,'#deliveryTable'), inputForCell(1,'' ,'#deliveryTable'), inputForCell(2,'','#deliveryTable'), inputForCell(3,'','#deliveryTable'), inputForCell(4,'','#deliveryTable')]);
+        }
+        if (t.id === 'clearDelivery') {
+          if(confirm('Clear deliveries?')) { $('#deliveryTable tbody').innerHTML=''; updateKPIs(); }
+        }
 
-    function renderHistory(){
-      const drafts = getDrafts().sort((a,b)=> (b.date||'').localeCompare(a.date||''));
-      const el = $('#history');
-      if(!drafts.length){ el.innerHTML = '<p class="muted">No drafts saved yet.</p>'; return; }
-      el.innerHTML = drafts.map(d=>{
-        const title = [d.date||'—', (d.customProject||d.project||'—')].join(' · ');
-        return `<div style="display:flex;gap:10px;align-items:center;margin:8px 0;padding:10px;border:1px solid #2a3b5e;border-radius:10px">
-          <div style="flex:1 1 auto">${title}</div>
-          <button class="btn" data-load="${d.id}">Open</button>
-          <button class="btn ghost danger" data-del="${d.id}">Delete</button>
-        </div>`
-      }).join('');
-      // bind
-      $$('#history [data-load]').forEach(b=> b.onclick = ()=> loadDraft(b.dataset.load));
-      $$('#history [data-del]').forEach(b=> b.onclick = ()=> { if(confirm('Delete this draft?')) deleteDraft(b.dataset.del) });
-    }
+        // Inspections
+        if (t.id === 'addInsp') {
+          addRow($('#inspTable tbody'), [inputForCell(0,'' ,'#inspTable'), inputForCell(1,'' ,'#inspTable'), inputForCell(2,'','#inspTable'), inputForCell(3,'','#inspTable'), inputForCell(4,'','#inspTable')]);
+        }
+        if (t.id === 'clearInsp') {
+          if(confirm('Clear inspections?')) { $('#inspTable tbody').innerHTML=''; updateKPIs(); }
+        }
 
-    function toast(msg){
-      const t = document.createElement('div');
-      t.textContent = msg;
-      t.style.position='fixed';t.style.right='16px';t.style.bottom='16px';t.style.padding='10px 14px';
-      t.style.background:'#0f1730';t.style.border='1px solid #2a3b5e';t.style.borderRadius='10px';
-      t.style.zIndex=99;
-      document.body.appendChild(t);
-      setTimeout(()=> t.remove(), 1600);
-    }
+        // Equipment
+        if (t.id === 'addEquip') {
+          addRow($('#equipTable tbody'), [inputForCell(0,'' ,'#equipTable'), inputForCell(1,'' ,'#equipTable'), inputForCell(2,'','#equipTable'), inputForCell(3,'','#equipTable'), inputForCell(4,'','#equipTable')]);
+        }
+        if (t.id === 'clearEquip') {
+          if(confirm('Clear equipment?')) { $('#equipTable tbody').innerHTML=''; updateKPIs(); }
+        }
 
-    // ====== Dynamic Tables ======
-    function addRow(tbody, cells){
-      const tr = document.createElement('tr');
-      tr.innerHTML = cells.map((c,i)=> `<td>${c}</td>`).join('') + `<td><button class="btn ghost" data-remove>✕</button></td>`;
-      tbody.appendChild(tr);
-      tr.querySelector('[data-remove]').onclick = ()=> { tr.remove(); updateKPIs(); };
-      tr.querySelectorAll('input,textarea,select').forEach(el=> el.addEventListener('input', updateKPIs));
-    }
+        // Row remove (works for all tables)
+        if (t.matches('[data-remove]')) {
+          t.closest('tr')?.remove();
+          updateKPIs();
+        }
 
-    function tableToJSON(sel){
-      const rows = $$(sel+' tbody tr');
-      return rows.map(tr=> Array.from(tr.querySelectorAll('td')).slice(0,-1).map(td=>{
-        const input = td.querySelector('input,textarea,select');
-        return input ? input.value : td.textContent;
-      }));
-    }
+        // History load/delete
+        if (t.matches('[data-load]')) loadDraft(t.dataset.load);
+        if (t.matches('[data-del]')) { if(confirm('Delete this draft?')) deleteDraft(t.dataset.del); }
+      });
 
-    function jsonToTable(sel, rows){
-      const tbody = $(sel+' tbody');
-      tbody.innerHTML='';
-      rows.forEach(r=> addRow(tbody, r.map((v,idx)=> inputForCell(idx, v, sel))));
-    }
+      // Live KPI updates
+      $('#delays')?.addEventListener('input', updateKPIs);
+      $('#incidents')?.addEventListener('input', updateKPIs);
+      document.body.addEventListener('input', (e)=>{
+        if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT')) {
+          // update KPIs when table cells change
+          updateKPIs();
+        }
+      });
 
-    function inputForCell(idx, val, tableSel){
-      const numberCol = (tableSel==='#laborTable' && idx===2) || (tableSel==='#equipTable' && idx===2);
-      return `<input ${numberCol? 'type="number" min="0"':''} value="${val?escapeHtml(val):''}" />`;
-    }
-
-    function escapeHtml(s){
-      return String(s).replace(/[&<>"']/g, m=> ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[m]));
-    }
-
-    // ====== Photos ======
-    function addPhotoToGallery(src){
-      const img = document.createElement('img');
-      img.src = src; $('#gallery').appendChild(img);
-    }
-
-    // ====== KPIs ======
-    function updateKPIs(){
-      const labor = tableToJSON('#laborTable');
-      const totalCrew = labor.reduce((sum,row)=> sum + (parseInt(row[2]||0)||0), 0);
-      $('#kpiCrew').textContent = totalCrew;
-      $('#kpiVendors').textContent = new Set(labor.map(r=> r[0])).size || 0;
-      $('#kpiIssues').textContent = ($('#delays').value.trim() ? 1 : 0) + ($('#incidents').value.trim()?1:0);
-      $('#kpiInsp').textContent = tableToJSON('#inspTable').length;
-    }
-
-    // ====== Event bindings ======
-    let currentId = null;
-
-    function seed(){
-      addRow($('#laborTable tbody'), [inputForCell(0,'' ,'#laborTable'), inputForCell(1,'' ,'#laborTable'), inputForCell(2,'','#laborTable'), inputForCell(3,'','#laborTable'), inputForCell(4,'','#laborTable'), inputForCell(5,'','#laborTable')]);
-      addRow($('#deliveryTable tbody'), [inputForCell(0,'' ,'#deliveryTable'), inputForCell(1,'' ,'#deliveryTable'), inputForCell(2,'','#deliveryTable'), inputForCell(3,'','#deliveryTable'), inputForCell(4,'','#deliveryTable')]);
-      addRow($('#inspTable tbody'), [inputForCell(0,'' ,'#inspTable'), inputForCell(1,'' ,'#inspTable'), inputForCell(2,'','#inspTable'), inputForCell(3,'','#inspTable'), inputForCell(4,'','#inspTable')]);
-      addRow($('#equipTable tbody'), [inputForCell(0,'' ,'#equipTable'), inputForCell(1,'' ,'#equipTable'), inputForCell(2,'','#equipTable'), inputForCell(3,'','#equipTable'), inputForCell(4,'','#equipTable')]);
-    }
-
-    // Buttons
-    $('#saveBtn').onclick = saveDraft;
-    $('#newBtn').onclick = ()=> { if(confirm('Clear the form for a new report?')) { currentId=null; document.querySelector('form')?.reset(); setForm({}); seed(); } };
-    $('#exportBtn').onclick = ()=> {
-      const data = getForm();
-      const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      const name = `daily-report_${data.date||'undated'}.json`;
-      a.download = name;
-      a.click();
-    };
-    $('#importFile').addEventListener('change', (e)=>{
-      const file = e.target.files?.[0]; if(!file) return;
-      const r = new FileReader(); r.onload = ()=> {
-        try{ const data = JSON.parse(r.result); currentId = data.id || null; setForm(data); toast('Imported'); }
-        catch(err){ alert('Invalid JSON file'); }
-      }; r.readAsText(file);
-    });
-    $('#printBtn').onclick = ()=> window.print();
-
-    // Table controls
-    $('#addLabor').onclick = ()=> addRow($('#laborTable tbody'), [inputForCell(0,'' ,'#laborTable'), inputForCell(1,'' ,'#laborTable'), inputForCell(2,'','#laborTable'), inputForCell(3,'','#laborTable'), inputForCell(4,'','#laborTable'), inputForCell(5,'','#laborTable')]);
-    $('#clearLabor').onclick = ()=> { if(confirm('Clear labor table?')) { $('#laborTable tbody').innerHTML=''; updateKPIs(); } };
-
-    $('#addDelivery').onclick = ()=> addRow($('#deliveryTable tbody'), [inputForCell(0,'' ,'#deliveryTable'), inputForCell(1,'' ,'#deliveryTable'), inputForCell(2,'','#deliveryTable'), inputForCell(3,'','#deliveryTable'), inputForCell(4,'','#deliveryTable')]);
-    $('#clearDelivery').onclick = ()=> { if(confirm('Clear deliveries?')) { $('#deliveryTable tbody').innerHTML=''; updateKPIs(); } };
-
-    $('#addInsp').onclick = ()=> addRow($('#inspTable tbody'), [inputForCell(0,'' ,'#inspTable'), inputForCell(1,'' ,'#inspTable'), inputForCell(2,'','#inspTable'), inputForCell(3,'','#inspTable'), inputForCell(4,'','#inspTable')]);
-    $('#clearInsp').onclick = ()=> { if(confirm('Clear inspections?')) { $('#inspTable tbody').innerHTML=''; updateKPIs(); } };
-
-    $('#addEquip').onclick = ()=> addRow($('#equipTable tbody'), [inputForCell(0,'' ,'#equipTable'), inputForCell(1,'' ,'#equipTable'), inputForCell(2,'','#equipTable'), inputForCell(3,'','#equipTable'), inputForCell(4,'','#equipTable')]);
-    $('#clearEquip').onclick = ()=> { if(confirm('Clear equipment?')) { $('#equipTable tbody').innerHTML=''; updateKPIs(); } };
-
-    // Photos
-    $('#photoInput').addEventListener('change', (e)=>{
-      const files = Array.from(e.target.files||[]);
-      files.forEach(f=>{
-        const r = new FileReader();
-        r.onload = ()=> addPhotoToGallery(r.result);
-        r.readAsDataURL(f);
-      })
-    });
-    $('#clearPhotos').onclick = ()=> { if(confirm('Clear photos?')) $('#gallery').innerHTML=''; };
-
-    // Live KPI updates
-    $('#delays').addEventListener('input', updateKPIs);
-    $('#incidents').addEventListener('input', updateKPIs);
-
-    // History controls
-    $('#wipeAll').onclick = ()=> { if(confirm('Delete ALL drafts saved in this browser?')) { localStorage.removeItem(STORAGE_KEY); renderHistory(); }}
-
-    // Init
-    (function init(){
+      // Init once DOM is ready
       const today = new Date();
       $('#date').valueAsDate = today;
       $('#preparedAt').value = today.toTimeString().slice(0,5);
       seed();
       renderHistory();
       updateKPIs();
-    })();
-  </script>
+
+    } catch (err) {
+      console.error('Init error:', err);
+      alert('An error occurred initializing the page. Try hard refresh (Ctrl+Shift+R).');
+    }
+  });
+</script>
+
 
   <!-- PWA: service worker registration -->
   <script>
@@ -614,6 +653,7 @@
   </script>
 </body>
 </html>
+
 
 
 
