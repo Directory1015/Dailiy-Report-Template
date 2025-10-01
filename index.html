@@ -15,7 +15,14 @@
     .wrap{max-width:1100px;margin:0 auto;padding:24px}
     header{position:sticky;top:0;z-index:5;background:linear-gradient(180deg,rgba(11,15,26,.95),rgba(11,15,26,.75));backdrop-filter:saturate(1.2) blur(6px);border-bottom:1px solid #1f2a44}
     .top{display:flex;align-items:center;gap:14px;max-width:1100px;margin:0 auto;padding:14px 24px}
-    .logo{width:42px;height:42px;border-radius:12px;background:#0a1222;border:1px solid #203152;display:grid;place-items:center;font-weight:800}
+
+    /* LOGO */
+    .brand-logo{
+      height:44px; width:auto; display:block;
+      border-radius:6px;
+      background:#fff; /* PNG is on white canvas + thin border; keeps it crisp in dark header */
+    }
+
     h1{font-size:18px;margin:0}
     .actions{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
     button,.btn{border:1px solid #29406b;background:#16223a;color:#e9eef6;padding:10px 14px;border-radius:10px;cursor:pointer}
@@ -61,13 +68,27 @@
       .card{break-inside:avoid;background:white;border:1px solid #ddd}
       input,select,textarea{background:white;color:black;border:1px solid #ccc}
       th,td{border-color:#ccc}
+
+      /* ✅ Make KPI tiles readable in PDF */
+      .kpi .box{
+        background:#0f1730 !important;
+        color:#fff !important;
+        border-color:#0e1223 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      .kpi .box label,
+      .kpi .box b{
+        color:#fff !important;
+      }
     }
   </style>
 </head>
 <body>
   <header>
     <div class="top">
-      <div class="logo">DR</div>
+      <!-- ✅ Logo image -->
+      <img src="assets/comet.png" alt="Comet Builders logo" class="brand-logo">
       <h1>Daily Site Report</h1>
       <div class="actions">
         <button class="btn primary" id="saveBtn">Save Draft</button>
@@ -126,7 +147,7 @@
         </div>
         <div class="kpi">
           <div class="box"><label>Total Crew</label><div><b id="kpiCrew">0</b></div></div>
-          <div class="box"><label>Vendors On‑Site</label><div><b id="kpiVendors">0</b></div></div>
+          <div class="box"><label>Vendors On-Site</label><div><b id="kpiVendors">0</b></div></div>
           <div class="box"><label>Open Issues</label><div><b id="kpiIssues">0</b></div></div>
           <div class="box"><label>Inspections</label><div><b id="kpiInsp">0</b></div></div>
         </div>
@@ -248,7 +269,7 @@
 
       <!-- Equipment On Site -->
       <div class="card">
-        <h2>Equipment On‑Site</h2>
+        <h2>Equipment On-Site</h2>
         <div class="tools">
           <button class="btn" id="addEquip">+ Add Equipment</button>
           <button class="btn ghost" id="clearEquip">Clear</button>
@@ -284,7 +305,7 @@
 
       <!-- Sign-off -->
       <div class="card">
-        <h2>Sign‑Off</h2>
+        <h2>Sign-Off</h2>
         <div class="row">
           <div style="grid-column:span 4">
             <label for="preparedBy">Prepared By</label>
@@ -549,7 +570,6 @@
 
     // Init
     (function init(){
-      // Default date/time
       const today = new Date();
       $('#date').valueAsDate = today;
       $('#preparedAt').value = today.toTimeString().slice(0,5);
@@ -560,6 +580,8 @@
   </script>
 </body>
 </html>
+
+
 
 
 
