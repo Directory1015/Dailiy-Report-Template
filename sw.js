@@ -1,41 +1,37 @@
-// sw.js — v8
-const CACHE = 'dsr-v8';
-const ASSETS = [
+// sw.js v9
+var CACHE = 'dsr-v9';
+var ASSETS = [
   './',
   './index.html',
   './manifest.webmanifest',
   './assets/comet.png'
 ];
 
-self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)));
+self.addEventListener('install', function(e){
+  e.waitUntil(caches.open(CACHE).then(function(c){ return c.addAll(ASSETS); }));
   self.skipWaiting();
 });
-
-self.addEventListener('activate', (e) => {
+self.addEventListener('activate', function(e){
   e.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
-    )
+    caches.keys().then(function(keys){
+      return Promise.all(keys.filter(function(k){ return k!==CACHE; }).map(function(k){ return caches.delete(k); }));
+    })
   );
   self.clients.claim();
 });
-
-self.addEventListener('fetch', (e) => {
-  const url = new URL(e.request.url);
-  const matchList = [ ...ASSETS, './' ].map(p => p.replace('./','/'));
-  const isAsset = matchList.some(p => url.pathname.endsWith(p));
+self.addEventListener('fetch', function(e){
+  var url = new URL(e.request.url);
+  var matchList = ASSETS.concat(['./']).map(function(p){ return p.replace('./','/'); });
+  var isAsset = matchList.some(function(p){ return url.pathname.endsWith(p); });
   if (isAsset) {
-    e.respondWith(caches.match(e.request).then(r => r || fetch(e.request)));
+    e.respondWith(caches.match(e.request).then(function(r){ return r || fetch(e.request); }));
   } else {
     e.respondWith(
-      fetch(e.request)
-        .then(res => {
-          const copy = res.clone();
-          caches.open(CACHE).then(c => c.put(e.request, copy));
-          return res;
-        })
-        .catch(() => caches.match(e.request))
+      fetch(e.request).then(function(res){
+        var copy = res.clone();
+        caches.open(CACHE).then(function(c){ c.put(e.request, copy); });
+        return res;
+      }).catch(function(){ return caches.match(e.request); })
     );
   }
 });
