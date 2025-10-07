@@ -34,41 +34,40 @@
     .card h2{font-size:16px;margin:0 0 12px 0}
     .row{display:grid;grid-template-columns:repeat(12,1fr);gap:12px;margin-bottom:10px}
     label{font-size:12px;color:var(--muted)}
-    label{font-size:12px;color:var(--muted)}
 
-/* REPLACE the one-liner below with this whole block */
-input[type="text"],
-input[type="number"],
-input[type="date"],
-input[type="datetime-local"],
-input[type="email"],
-input[type="time"],
-select,
-textarea{
-  width:100%;
-  padding:10px 12px;
-  border-radius:10px;
-  border:1px solid var(--border);
-  background:#fff;
-  color:var(--ink);
-}
+    /* Text inputs only (don't style radios/checkboxes here) */
+    input[type="text"],
+    input[type="number"],
+    input[type="date"],
+    input[type="datetime-local"],
+    input[type="email"],
+    input[type="time"],
+    select,
+    textarea{
+      width:100%;
+      padding:10px 12px;
+      border-radius:10px;
+      border:1px solid var(--border);
+      background:#fff;
+      color:var(--ink);
+    }
 
-/* ADD this new block directly under the one above */
-input[type="radio"],
-input[type="checkbox"]{
-  width:18px;
-  height:18px;
-  padding:0;
-  margin:0;
-  border:0;
-  background:transparent;
-  box-shadow:none;
-  appearance:auto;
-  -webkit-appearance:auto;
-  -moz-appearance:auto;
-}
-
-textarea{min-height:110px;resize:vertical}  /* keep this line you already have */
+    /* Radios/checkboxes: force system appearance so the dots/boxes show */
+    input[type="radio"],
+    input[type="checkbox"]{
+      display:inline-block !important;
+      width:18px !important;
+      height:18px !important;
+      margin:0;
+      padding:0;
+      border:initial !important;
+      background:transparent !important;
+      box-shadow:none !important;
+      appearance:auto !important;
+      -webkit-appearance:auto !important;
+      -moz-appearance:auto !important;
+      accent-color: currentColor;
+    }
 
     textarea{min-height:110px;resize:vertical}
     .checklist{display:grid;gap:8px}
@@ -83,7 +82,6 @@ textarea{min-height:110px;resize:vertical}  /* keep this line you already have *
 
     /* Center choice controls in Part 2 */
     .ynna-cell{display:flex;align-items:center;justify-content:center}
-    .ynna-cell input{width:18px;height:18px}
 
     @media (max-width:900px){ .row{grid-template-columns:repeat(6,1fr)} }
     @media (max-width:600px){ .row{grid-template-columns:repeat(2,1fr)} }
@@ -241,8 +239,20 @@ textarea{min-height:110px;resize:vertical}  /* keep this line you already have *
             <tr><th style="width:60px">Ref</th><th>Question</th><th style="width:70px">Yes</th><th style="width:70px">No</th><th style="width:70px">N/A</th></tr>
           </thead>
           <tbody>
-            <tr><td>L</td><td>Are sediment or other pollutants noted beyond the approved/permitted limits of disturbance?</td><td class="ynna-cell"><input type="radio" name="p2d_0" value="Y"></td><td class="ynna-cell"><input type="radio" name="p2d_0" value="N"></td><td class="ynna-cell"><input type="radio" name="p2d_0" value="NA"></td></tr>
-            <tr><td>M</td><td>Are BMPs detected as releasing sediment or other pollutants into receiving waters?</td><td class="ynna-cell"><input type="radio" name="p2d_1" value="Y"></td><td class="ynna-cell"><input type="radio" name="p2d_1" value="N"></td><td class="ynna-cell"><input type="radio" name="p2d_1" value="NA"></td></tr>
+            <tr>
+              <td>L</td>
+              <td>Are sediment or other pollutants noted beyond the approved/permitted limits of disturbance?</td>
+              <td class="ynna-cell"><input type="radio" name="p2d_0" value="Y"></td>
+              <td class="ynna-cell"><input type="radio" name="p2d_0" value="N"></td>
+              <td class="ynna-cell"><input type="radio" name="p2d_0" value="NA"></td>
+            </tr>
+            <tr>
+              <td>M</td>
+              <td>Are BMPs detected as releasing sediment or other pollutants into receiving waters?</td>
+              <td class="ynna-cell"><input type="radio" name="p2d_1" value="Y"></td>
+              <td class="ynna-cell"><input type="radio" name="p2d_1" value="N"></td>
+              <td class="ynna-cell"><input type="radio" name="p2d_1" value="NA"></td>
+            </tr>
           </tbody>
         </table>
         <div class="small info" style="margin-top:8px">
@@ -264,7 +274,7 @@ textarea{min-height:110px;resize:vertical}  /* keep this line you already have *
               <tr>
                 <th>Measure ID / Location and Description</th>
                 <th>Reference(s)</th>
-                <th>Operating Properly? (Y/N)</th>
+                <th>Operating Properly?</th>
                 <th>Inspection Date</th>
                 <th>Describe Actions Needed</th>
                 <th>Date Previous Action(s) Observed as Corrected</th>
@@ -292,10 +302,10 @@ textarea{min-height:110px;resize:vertical}  /* keep this line you already have *
             <thead>
               <tr>
                 <th>Stormwater Discharge Outfall ID / Location</th>
-                <th>Any Visible Sedimentation in Streams/Wetlands/Outside Site Limits? (Y/N)</th>
-                <th>Any Increase in Stream Turbidity from Discharge? (Y/N)</th>
-                <th>Any Visible Erosion below SDO? (Y/N)</th>
-                <th>Any visible oil sheen / floating or suspended solids / discoloration? (Y/N)</th>
+                <th>Visible Sedimentation in Streams/Wetlands/Outside Site Limits?</th>
+                <th>Increase in Stream Turbidity from Discharge?</th>
+                <th>Visible Erosion below SDO?</th>
+                <th>Visible oil sheen / floating or suspended solids / discoloration?</th>
                 <th>Inspection Date</th>
                 <th>Describe Actions Needed</th>
                 <th>Date Previous Action(s) Observed as Corrected</th>
@@ -321,9 +331,9 @@ textarea{min-height:110px;resize:vertical}  /* keep this line you already have *
               <tr>
                 <th>Site area description and location where activities have temporarily or permanently ceased</th>
                 <th>Time Limit for Ground Cover</th>
-                <th>Have stabilization measures been installed? (Y/N)</th>
+                <th>Have stabilization measures been installed?</th>
                 <th>Temporary or Permanent (T/P)</th>
-                <th>Is Ground Cover sufficient to restrain erosion? (Y/N)</th>
+                <th>Is Ground Cover sufficient to restrain erosion?</th>
                 <th>Original Inspection Date</th>
                 <th>Describe Actions Needed</th>
                 <th>Date Previous Action(s) Observed as Corrected</th>
@@ -350,7 +360,7 @@ textarea{min-height:110px;resize:vertical}  /* keep this line you already have *
                 <th>Measure ID or Location and Description</th>
                 <th>Proposed Dimensions (ft.)</th>
                 <th>Actual Dimensions (ft.)</th>
-                <th>Significant Deviation from Plan? (Y/N)</th>
+                <th>Significant Deviation from Plan?</th>
                 <th>Date measure observed as installed / altered / relocated / removed</th>
                 <th>Installed (I) / Altered (A) / Relocated (R) / Removed (X)</th>
                 <th style="width:56px">—</th>
@@ -393,14 +403,17 @@ textarea{min-height:110px;resize:vertical}  /* keep this line you already have *
     </section>
   </div>
 
-  <!-- Inline JS: radios for Part 2 + full app logic -->
+  <!-- Inline JS: radios in Part 2 + Part 3; full app logic -->
   <script>
   (function(){
     function $(s, r){ return (r||document).querySelector(s); }
     function $$(s, r){ return Array.prototype.slice.call((r||document).querySelectorAll(s)); }
 
-    const STORAGE_KEY = 'demlrDrafts_v4'; // bumped for radio migration
+    const STORAGE_KEY = 'demlrDrafts_v5'; // bumped for Part 3 radios
     let currentId = null;
+
+    // Row index counters for naming radio groups in Part 3
+    let p3aIdx = 0, p3bIdx = 0, p3cIdx = 0, p3dIdx = 0;
 
     function uid(){ return Math.random().toString(36).slice(2) + Date.now().toString(36); }
     function getDrafts(){ try{ return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }catch(e){ return []; } }
@@ -429,67 +442,166 @@ textarea{min-height:110px;resize:vertical}  /* keep this line you already have *
       });
     }
 
-    // ---- Part 3 table utilities ----
-    function addRow(tbody, cells){
-      if(!tbody) return;
-      const tr = document.createElement('tr');
-      tr.innerHTML = cells.map(function(c){ return '<td>'+c+'</td>'; }).join('') +
-                     '<td style="width:56px"><button type="button" class="btn ghost" data-remove>✕</button></td>';
-      tbody.appendChild(tr);
+    // ---- Utility: serialize a td that may contain multiple inputs (e.g., radios) ----
+    function serializeCell(td){
+      // Prefer checked radio if present
+      const checkedRadio = td.querySelector('input[type="radio"]:checked');
+      if (checkedRadio) return checkedRadio.value || '';
+      const cb = td.querySelector('input[type="checkbox"]');
+      if (cb) return cb.checked ? 'Y' : '';
+      const el = td.querySelector('input,textarea,select');
+      return el ? el.value : td.textContent;
     }
+
     function tableToJSON(sel, hasRemoveCol){
       const rows = $$(sel+' tbody tr');
       return rows.map(function(tr){
         const tds = Array.prototype.slice.call(tr.querySelectorAll('td'));
         const take = hasRemoveCol ? tds.slice(0, -1) : tds;
-        return take.map(function(td){
-          const el = td.querySelector('input,textarea,select');
-          if (!el) return td.textContent;
-          if (el.type === 'checkbox' || el.type === 'radio') return el.checked ? (el.value || 'Y') : '';
-          return el.value;
-        });
-      });
-    }
-    function jsonToTable(sel, rows, makeCell, withRemoveCol){
-      const tbody = $(sel+' tbody'); if(!tbody) return;
-      tbody.innerHTML = '';
-      rows.forEach(function(r){
-        const cells = r.map(function(v, idx){ return makeCell(idx, v); });
-        if (withRemoveCol) addRow(tbody, cells);
-        else {
-          const tr = document.createElement('tr');
-          tr.innerHTML = cells.map(function(c){ return '<td>'+c+'</td>'; }).join('');
-          tbody.appendChild(tr);
-        }
+        return take.map(serializeCell);
       });
     }
 
-    // Part 3 cell factories
-    function p3aCell(idx, v){
-      if (idx === 2) return '<input value="'+(v||'')+'" placeholder="Y/N"/>';
-      if (idx === 3) return '<input type="date" value="'+(v||'')+'"/>';
-      if (idx === 4) return '<textarea>'+(v||'')+'</textarea>';
-      if (idx === 5) return '<input type="date" value="'+(v||'')+'"/>';
-      return '<input value="'+(v||'')+'"/>';
+    // ---- Builders for Part 3 rows (with radios for Y/N columns) ----
+    function buildP3aRow(data, index){
+      const tr = document.createElement('tr');
+      const v = data || [];
+      const yn = (v[2]||'').toUpperCase();
+      tr.innerHTML = `
+        <td><input value="${v[0]||''}" placeholder="Measure ID / Location and Description"/></td>
+        <td><input value="${v[1]||''}" placeholder="Ref letter(s) e.g., A,C"/></td>
+        <td class="ynna-cell">
+          <label style="display:flex;gap:6px;align-items:center">
+            <input type="radio" name="p3a_op_${index}" value="Y" ${yn==='Y'?'checked':''}> Y
+          </label>
+          &nbsp;&nbsp;
+          <label style="display:flex;gap:6px;align-items:center">
+            <input type="radio" name="p3a_op_${index}" value="N" ${yn==='N'?'checked':''}> N
+          </label>
+        </td>
+        <td><input type="date" value="${v[3]||''}"/></td>
+        <td><textarea>${v[4]||''}</textarea></td>
+        <td><input type="date" value="${v[5]||''}"/></td>
+        <td style="width:56px"><button type="button" class="btn ghost" data-remove>✕</button></td>
+      `;
+      return tr;
     }
-    function p3bCell(idx, v){
-      if ([1,2,3,4].includes(idx)) return '<input value="'+(v||'')+'" placeholder="Y/N"/>';
-      if ([5,7].includes(idx))    return '<input type="date" value="'+(v||'')+'"/>';
-      if (idx === 6)              return '<textarea>'+(v||'')+'</textarea>';
-      return '<input value="'+(v||'')+'"/>';
+
+    function buildP3bRow(data, index){
+      const v = data || [];
+      function ynCell(name, val){
+        const up = (val||'').toUpperCase();
+        return `
+          <div class="ynna-cell" style="gap:10px">
+            <label style="display:flex;gap:6px;align-items:center">
+              <input type="radio" name="${name}" value="Y" ${up==='Y'?'checked':''}> Y
+            </label>
+            <label style="display:flex;gap:6px;align-items:center">
+              <input type="radio" name="${name}" value="N" ${up==='N'?'checked':''}> N
+            </label>
+          </div>`;
+      }
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><input value="${v[0]||''}" placeholder="Outfall ID / Location"/></td>
+        <td>${ynCell('p3b_sed_'+index, v[1])}</td>
+        <td>${ynCell('p3b_turb_'+index, v[2])}</td>
+        <td>${ynCell('p3b_eros_'+index, v[3])}</td>
+        <td>${ynCell('p3b_sheen_'+index, v[4])}</td>
+        <td><input type="date" value="${v[5]||''}"/></td>
+        <td><textarea>${v[6]||''}</textarea></td>
+        <td><input type="date" value="${v[7]||''}"/></td>
+        <td style="width:56px"><button type="button" class="btn ghost" data-remove>✕</button></td>
+      `;
+      return tr;
     }
-    function p3cCell(idx, v){
-      if (idx === 2 || idx === 4) return '<input value="'+(v||'')+'" placeholder="Y/N"/>';
-      if (idx === 3)              return '<input value="'+(v||'')+'" placeholder="T/P"/>';
-      if (idx === 5 || idx === 7) return '<input type="date" value="'+(v||'')+'"/>';
-      if (idx === 6)              return '<textarea>'+(v||'')+'</textarea>';
-      return '<input value="'+(v||'')+'"/>';
+
+    function buildP3cRow(data, index){
+      const v = data || [];
+      const inst = (v[2]||'').toUpperCase();
+      const suff = (v[4]||'').toUpperCase();
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><input value="${v[0]||''}" placeholder="Area description and location"/></td>
+        <td><input value="${v[1]||''}" placeholder="Time limit"/></td>
+        <td class="ynna-cell" style="gap:10px">
+          <label style="display:flex;gap:6px;align-items:center">
+            <input type="radio" name="p3c_inst_${index}" value="Y" ${inst==='Y'?'checked':''}> Y
+          </label>
+          <label style="display:flex;gap:6px;align-items:center">
+            <input type="radio" name="p3c_inst_${index}" value="N" ${inst==='N'?'checked':''}> N
+          </label>
+        </td>
+        <td><input value="${v[3]||''}" placeholder="T/P"/></td>
+        <td class="ynna-cell" style="gap:10px">
+          <label style="display:flex;gap:6px;align-items:center">
+            <input type="radio" name="p3c_suff_${index}" value="Y" ${suff==='Y'?'checked':''}> Y
+          </label>
+          <label style="display:flex;gap:6px;align-items:center">
+            <input type="radio" name="p3c_suff_${index}" value="N" ${suff==='N'?'checked':''}> N
+          </label>
+        </td>
+        <td><input type="date" value="${v[5]||''}"/></td>
+        <td><textarea>${v[6]||''}</textarea></td>
+        <td><input type="date" value="${v[7]||''}"/></td>
+        <td style="width:56px"><button type="button" class="btn ghost" data-remove>✕</button></td>
+      `;
+      return tr;
     }
-    function p3dCell(idx, v){
-      if (idx === 3) return '<input value="'+(v||'')+'" placeholder="Y/N"/>';
-      if (idx === 4) return '<input type="date" value="'+(v||'')+'"/>';
-      if (idx === 5) return '<input value="'+(v||'')+'" placeholder="I/A/R/X"/>';
-      return '<input value="'+(v||'')+'"/>';
+
+    function buildP3dRow(data, index){
+      const v = data || [];
+      const dev = (v[3]||'').toUpperCase();
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><input value="${v[0]||''}" placeholder="Measure ID / Location and Description"/></td>
+        <td><input value="${v[1]||''}" placeholder="Proposed ft."/></td>
+        <td><input value="${v[2]||''}" placeholder="Actual ft."/></td>
+        <td class="ynna-cell" style="gap:10px">
+          <label style="display:flex;gap:6px;align-items:center">
+            <input type="radio" name="p3d_dev_${index}" value="Y" ${dev==='Y'?'checked':''}> Y
+          </label>
+          <label style="display:flex;gap:6px;align-items:center">
+            <input type="radio" name="p3d_dev_${index}" value="N" ${dev==='N'?'checked':''}> N
+          </label>
+        </td>
+        <td><input type="date" value="${v[4]||''}"/></td>
+        <td><input value="${v[5]||''}" placeholder="I/A/R/X"/></td>
+        <td style="width:56px"><button type="button" class="btn ghost" data-remove>✕</button></td>
+      `;
+      return tr;
+    }
+
+    // ---- Add row helpers (increments counters; supports optional data) ----
+    function addP3aRow(data){
+      const tbody = $('#part3aTable tbody');
+      const tr = buildP3aRow(data, p3aIdx++); tbody.appendChild(tr);
+    }
+    function addP3bRow(data){
+      const tbody = $('#part3bTable tbody');
+      const tr = buildP3bRow(data, p3bIdx++); tbody.appendChild(tr);
+    }
+    function addP3cRow(data){
+      const tbody = $('#part3cTable tbody');
+      const tr = buildP3cRow(data, p3cIdx++); tbody.appendChild(tr);
+    }
+    function addP3dRow(data){
+      const tbody = $('#part3dTable tbody');
+      const tr = buildP3dRow(data, p3dIdx++); tbody.appendChild(tr);
+    }
+
+    // ---- Restore Part 3 tables from saved arrays ----
+    function restoreP3(table, rows){
+      const map = {
+        'part3aTable':[addP3aRow, () => { p3aIdx = 0; }],
+        'part3bTable':[addP3bRow, () => { p3bIdx = 0; }],
+        'part3cTable':[addP3cRow, () => { p3cIdx = 0; }],
+        'part3dTable':[addP3dRow, () => { p3dIdx = 0; }],
+      };
+      const tbody = $('#'+table+' tbody'); if(!tbody) return;
+      const [adder, reset] = map[table]; reset();
+      tbody.innerHTML = '';
+      (rows||[]).forEach(function(r){ adder(r); });
     }
 
     // ---- Collect / Set entire form ----
@@ -574,10 +686,10 @@ textarea{min-height:110px;resize:vertical}  /* keep this line you already have *
       part2FromJSON('#part2cTable', d.part2c);
       part2FromJSON('#part2dTable', d.part2d);
 
-      jsonToTable('#part3aTable', d.part3a || [], p3aCell, true);
-      jsonToTable('#part3bTable', d.part3b || [], p3bCell, true);
-      jsonToTable('#part3cTable', d.part3c || [], p3cCell, true);
-      jsonToTable('#part3dTable', d.part3d || [], p3dCell, true);
+      restoreP3('part3aTable', d.part3a);
+      restoreP3('part3bTable', d.part3b);
+      restoreP3('part3cTable', d.part3c);
+      restoreP3('part3dTable', d.part3d);
 
       setVal('#inspector_name', d.inspector_name);
       setVal('#employer', d.employer);
@@ -637,98 +749,34 @@ textarea{min-height:110px;resize:vertical}  /* keep this line you already have *
       setDrafts(ds); currentId = draft.id; renderHistory();
     });
     $('#newBtn')?.addEventListener('click', function(ev){ ev.preventDefault();
-      if (confirm('Clear the form for a new DEMLR entry?')) { currentId = null; setForm({}); seed(); }
+      if (confirm('Clear the form for a new DEMLR entry?')) {
+        currentId = null;
+        // reset tables & counters
+        p3aIdx = p3bIdx = p3cIdx = p3dIdx = 0;
+        $('#part3aTable tbody').innerHTML = '';
+        $('#part3bTable tbody').innerHTML = '';
+        $('#part3cTable tbody').innerHTML = '';
+        $('#part3dTable tbody').innerHTML = '';
+        seed();
+      }
     });
     $('#printBtn')?.addEventListener('click', function(ev){ ev.preventDefault(); setTimeout(function(){ window.print(); }, 0); });
-    $('#clearP3a')?.addEventListener('click', function(){ if(confirm('Clear Part 3A table?')) $('#part3aTable tbody').innerHTML=''; });
-    $('#clearP3b')?.addEventListener('click', function(){ if(confirm('Clear Part 3B table?')) $('#part3bTable tbody').innerHTML=''; });
-    $('#clearP3c')?.addEventListener('click', function(){ if(confirm('Clear Part 3C table?')) $('#part3cTable tbody').innerHTML=''; });
-    $('#clearP3d')?.addEventListener('click', function(){ if(confirm('Clear Part 3D table?')) $('#part3dTable tbody').innerHTML=''; });
-    $('#wipeAll')?.addEventListener('click', function(){ if(confirm('Delete ALL DEMLR drafts saved in this browser?')) { localStorage.removeItem(STORAGE_KEY); const h=$('#history'); if(h) h.innerHTML=''; } });
+    $('#clearP3a')?.addEventListener('click', function(){ if(confirm('Clear Part 3A table?')) { $('#part3aTable tbody').innerHTML=''; p3aIdx=0; } });
+    $('#clearP3b')?.addEventListener('click', function(){ if(confirm('Clear Part 3B table?')) { $('#part3bTable tbody').innerHTML=''; p3bIdx=0; } });
+    $('#clearP3c')?.addEventListener('click', function(){ if(confirm('Clear Part 3C table?')) { $('#part3cTable tbody').innerHTML=''; p3cIdx=0; } });
+    $('#clearP3d')?.addEventListener('click', function(){ if(confirm('Clear Part 3D table?')) { $('#part3dTable tbody').innerHTML=''; p3dIdx=0; } });
 
-    $('#addP3aRow')?.addEventListener('click', function(){
-      addRow($('#part3aTable tbody'), [
-        '<input placeholder="Measure ID / Location and Description"/>',
-        '<input placeholder="Ref letter(s) e.g., A,C"/>',
-        '<input placeholder="Y/N"/>',
-        '<input type="date"/>',
-        '<textarea placeholder="Corrective actions..."></textarea>',
-        '<input type="date"/>'
-      ]);
-    });
-    $('#addP3bRow')?.addEventListener('click', function(){
-      addRow($('#part3bTable tbody'), [
-        '<input placeholder="Outfall ID / Location"/>',
-        '<input placeholder="Y/N"/>',
-        '<input placeholder="Y/N"/>',
-        '<input placeholder="Y/N"/>',
-        '<input placeholder="Y/N"/>',
-        '<input type="date"/>',
-        '<textarea placeholder="Corrective actions..."></textarea>',
-        '<input type="date"/>'
-      ]);
-    });
-    $('#addP3cRow')?.addEventListener('click', function(){
-      addRow($('#part3cTable tbody'), [
-        '<input placeholder="Area description and location"/>',
-        '<input placeholder="Time limit"/>',
-        '<input placeholder="Y/N"/>',
-        '<input placeholder="T/P"/>',
-        '<input placeholder="Y/N"/>',
-        '<input type="date"/>',
-        '<textarea placeholder="Corrective actions..."></textarea>',
-        '<input type="date"/>'
-      ]);
-    });
-    $('#addP3dRow')?.addEventListener('click', function(){
-      addRow($('#part3dTable tbody'), [
-        '<input placeholder="Measure ID / Location and Description"/>',
-        '<input placeholder="Proposed ft."/>',
-        '<input placeholder="Actual ft."/>',
-        '<input placeholder="Y/N"/>',
-        '<input type="date"/>',
-        '<input placeholder="I/A/R/X"/>'
-      ]);
-    });
+    $('#addP3aRow')?.addEventListener('click', function(){ addP3aRow([]); });
+    $('#addP3bRow')?.addEventListener('click', function(){ addP3bRow([]); });
+    $('#addP3cRow')?.addEventListener('click', function(){ addP3cRow([]); });
+    $('#addP3dRow')?.addEventListener('click', function(){ addP3dRow([]); });
 
     // ---- Seed ----
     function seed(){
-      addRow($('#part3aTable tbody'), [
-        '<input placeholder="Measure ID / Location and Description"/>',
-        '<input placeholder="Ref letter(s) e.g., A,C"/>',
-        '<input placeholder="Y/N"/>',
-        '<input type="date"/>',
-        '<textarea placeholder="Corrective actions..."></textarea>',
-        '<input type="date"/>'
-      ]);
-      addRow($('#part3bTable tbody'), [
-        '<input placeholder="Outfall ID / Location"/>',
-        '<input placeholder="Y/N"/>',
-        '<input placeholder="Y/N"/>',
-        '<input placeholder="Y/N"/>',
-        '<input placeholder="Y/N"/>',
-        '<input type="date"/>',
-        '<textarea placeholder="Corrective actions..."></textarea>',
-        '<input type="date"/>'
-      ]);
-      addRow($('#part3cTable tbody'), [
-        '<input placeholder="Area description and location"/>',
-        '<input placeholder="Time limit"/>',
-        '<input placeholder="Y/N"/>',
-        '<input placeholder="T/P"/>',
-        '<input placeholder="Y/N"/>',
-        '<input type="date"/>',
-        '<textarea placeholder="Corrective actions..."></textarea>',
-        '<input type="date"/>'
-      ]);
-      addRow($('#part3dTable tbody'), [
-        '<input placeholder="Measure ID / Location and Description"/>',
-        '<input placeholder="Proposed ft."/>',
-        '<input placeholder="Actual ft."/>',
-        '<input placeholder="Y/N"/>',
-        '<input type="date"/>',
-        '<input placeholder="I/A/R/X"/>'
-      ]);
+      addP3aRow([]);
+      addP3bRow([]);
+      addP3cRow([]);
+      addP3dRow([]);
     }
 
     document.addEventListener('DOMContentLoaded', function(){
