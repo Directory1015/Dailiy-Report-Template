@@ -1,0 +1,403 @@
+<!--
+Repository patch for https://github.com/Directory1015/Dailiy-Report-Template
+Adds a new DEMLR Monitoring page (white theme), PDF export, and cross-links.
+Files included below:
+1) index.html (NAV link insertion only – search for NAV INSERT)
+2) demrl.html (new page)
+3) assets/demlr.css (new)
+4) assets/demlr.js (new)
+-->
+
+<!-- ============================= -->
+<!-- 1) index.html (PATCH SNIPPET) -->
+<!-- ============================= -->
+<!-- Find your existing site header/nav and add this link somewhere alongside Daily Reports. -->
+<!-- NAV INSERT START -->
+<a href="demlr.html" class="nav-link">DEMLR Monitoring</a>
+<!-- NAV INSERT END -->
+
+<!-- If your project has a sidebar instead of a top nav, place the same anchor there. -->
+
+
+<!-- =================== -->
+<!-- 2) demrl.html (NEW) -->
+<!-- =================== -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DEMLR Monitoring Form — White</title>
+  <link rel="stylesheet" href="assets/demlr.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <!-- html2canvas + jsPDF for client-side PDF creation (no backend needed) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" integrity="sha512-BNa5lQ8xv0j2lq9oQ6q7oqlI8N1X2qg6JmV8GgYu1h2k7tQ2zvGdQh7a9B3kP3o1qQ1vJm1m7q7VJ9f0Y6wZQw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" integrity="sha512-YkS9Q+U1hKqk1J9k0i3X7wX8cGQd3J8i2Tq9fG1Nw+8Q6f8p7z6i8o3Q3qk4o4m8m9J0x8y8S7bQh4m9n1uGbw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <div class="brand">Comet — DEMLR Monitoring</div>
+      <nav class="nav">
+        <a href="index.html" class="nav-link">← Back to Daily Reports</a>
+        <a href="#" id="btnPreview" class="button ghost">Preview PDF</a>
+        <a href="#" id="btnDownload" class="button">Save PDF</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="card">
+      <h1>DEMLR Monitoring Form</h1>
+      <p class="muted">Mirrors the state form structure so you can complete it on the site and export to PDF. For reference, the official form is included below in a viewer.</p>
+
+      <!-- Project meta -->
+      <div class="grid two">
+        <label class="field">
+          <span>Project Name</span>
+          <input type="text" name="project_name" placeholder="e.g., Comet Pittsboro" />
+        </label>
+        <label class="field">
+          <span>Land Quality or Local Program Project/Permit #</span>
+          <input type="text" name="permit_no" />
+        </label>
+        <label class="field">
+          <span>Approving Authority</span>
+          <input type="text" name="authority" />
+        </label>
+        <label class="field">
+          <span>Date of Plan Approval</span>
+          <input type="date" name="plan_approval" />
+        </label>
+        <label class="field">
+          <span>Expiration Date (if applicable)</span>
+          <input type="date" name="expiration" />
+        </label>
+        <label class="field">
+          <span>NCG010000 Certificate of Coverage #</span>
+          <input type="text" name="coc_number" />
+        </label>
+        <label class="field">
+          <span>Date of COC Issuance</span>
+          <input type="date" name="coc_date" />
+        </label>
+      </div>
+
+      <!-- PART 1A: Rainfall Data -->
+      <h2>Part 1A: Rainfall Data</h2>
+      <p class="muted">Daily rainfall required (inches). Enter 0 if no rain.</p>
+      <div class="grid seven rain">
+        <label class="field"><span>Mon</span><input type="number" step="0.01" name="rain_mon" /></label>
+        <label class="field"><span>Tue</span><input type="number" step="0.01" name="rain_tue" /></label>
+        <label class="field"><span>Wed</span><input type="number" step="0.01" name="rain_wed" /></label>
+        <label class="field"><span>Thu</span><input type="number" step="0.01" name="rain_thu" /></label>
+        <label class="field"><span>Fri</span><input type="number" step="0.01" name="rain_fri" /></label>
+        <label class="field"><span>Sat</span><input type="number" step="0.01" name="rain_sat" /></label>
+        <label class="field"><span>Sun</span><input type="number" step="0.01" name="rain_sun" /></label>
+      </div>
+
+      <!-- PART 1B: Phase(s) of the Plan -->
+      <h2>Part 1B: Phase(s) of the Plan</h2>
+      <div class="checklist">
+        <label><input type="checkbox" name="phase_install" /> Initial installation of erosion/sediment controls</label>
+        <label><input type="checkbox" name="phase_cg" /> Clearing & grubbing</label>
+        <label><input type="checkbox" name="phase_grading" /> Completion of grading that requires ground cover</label>
+        <label><input type="checkbox" name="phase_complete" /> Completion of all land-disturbing activity</label>
+        <label><input type="checkbox" name="phase_permcover" /> Permanent ground cover established</label>
+      </div>
+
+      <label class="field">
+        <span>Any conditions limiting completion of inspection?</span>
+        <textarea name="limits" rows="2" placeholder="Explain conditions and areas that were inaccessible..."></textarea>
+      </label>
+
+      <!-- PART 2: Stormwater Plans and Controls (sampled for MVP) -->
+      <h2>Part 2: Stormwater Plans and Controls (MVP)</h2>
+      <p class="muted">Mark Yes / No / N/A. You can add more rows as needed.</p>
+      <div class="table-wrap">
+        <table class="table" id="part2Table">
+          <thead>
+            <tr>
+              <th style="width:3rem">Ref</th><th>Question</th><th class="yn">Yes</th><th class="yn">No</th><th class="yn">N/A</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>A</td>
+              <td>Approval letter/COC & NPDES CGP on site (electronic copy acceptable)?</td>
+              <td><input type="radio" name="A" value="Yes" /></td>
+              <td><input type="radio" name="A" value="No" /></td>
+              <td><input type="radio" name="A" value="N/A" /></td>
+            </tr>
+            <tr>
+              <td>B</td>
+              <td>Approved plan on site and current?</td>
+              <td><input type="radio" name="B" value="Yes" /></td>
+              <td><input type="radio" name="B" value="No" /></td>
+              <td><input type="radio" name="B" value="N/A" /></td>
+            </tr>
+            <tr>
+              <td>C</td>
+              <td>Erosion/sediment controls installed and operating properly?</td>
+              <td><input type="radio" name="C" value="Yes" /></td>
+              <td><input type="radio" name="C" value="No" /></td>
+              <td><input type="radio" name="C" value="N/A" /></td>
+            </tr>
+          </tbody>
+        </table>
+        <button class="button ghost" id="addP2Row" type="button">+ Add Row</button>
+      </div>
+
+      <!-- PART 3A: E&S Control Measures (dynamic rows) -->
+      <h2>Part 3A: Erosion & Sedimentation Control Measures</h2>
+      <div class="table-wrap">
+        <table class="table" id="part3aTable">
+          <thead>
+            <tr>
+              <th>Measure ID / Location</th>
+              <th>Operating Properly? (Y/N)</th>
+              <th>Inspection Date</th>
+              <th>Actions Needed</th>
+              <th>Date Prev. Action Observed as Corrected</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+        <button class="button ghost" id="addP3aRow" type="button">+ Add Row</button>
+      </div>
+
+      <!-- PART 4: Signature -->
+      <h2>Part 4: Signature of Inspector</h2>
+      <div class="grid three">
+        <label class="field"><span>Inspector Name</span><input type="text" name="inspector_name" /></label>
+        <label class="field"><span>Employer</span><input type="text" name="employer" /></label>
+        <label class="field"><span>Inspector Type</span>
+          <select name="inspector_type">
+            <option value="FRP/Permittee">FRP/Permittee</option>
+            <option value="Agent/Designee">Agent/Designee</option>
+          </select>
+        </label>
+        <label class="field"><span>Address</span><input type="text" name="address" /></label>
+        <label class="field"><span>Phone</span><input type="tel" name="phone" /></label>
+        <label class="field"><span>Email</span><input type="email" name="email" /></label>
+        <label class="field"><span>Date & Time of Inspection</span><input type="datetime-local" name="inspection_dt" /></label>
+      </div>
+
+      <div class="actions">
+        <button class="button" id="btnSaveLocal" type="button">Save Progress (Local)</button>
+        <button class="button" id="btnClear" type="button">Clear Form</button>
+      </div>
+    </section>
+
+    <!-- Reference PDF Viewer -->
+    <section class="card">
+      <h2>Official DEMLR Monitoring Form (Reference PDF)</h2>
+      <p class="muted">Use this as a reference to ensure compliance; the on-page form above is structured to match.</p>
+      <object data="DEMLR-Monitoring-Form-Rev-07012020.pdf" type="application/pdf" class="pdf-viewer">
+        <p>Your browser can't display PDFs. <a href="DEMLR-Monitoring-Form-Rev-07012020.pdf" download>Download the form</a>.</p>
+      </object>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">© <span id="year"></span> Comet Builders — DEMLR Monitoring</div>
+  </footer>
+
+  <script src="assets/demlr.js"></script>
+</body>
+</html>
+
+
+<!-- ======================== -->
+<!-- 3) assets/demlr.css (NEW) -->
+<!-- ======================== -->
+/* White theme; keep it clean and print-friendly */
+:root {
+  --bg: #ffffff;
+  --text: #0f172a;
+  --muted: #64748b;
+  --border: #e2e8f0;
+  --accent: #0ea5e9;
+}
+* { box-sizing: border-box; }
+html, body { margin:0; padding:0; background:var(--bg); color:var(--text); font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
+.container { max-width: 1100px; margin: 0 auto; padding: 1.25rem; }
+.site-header { border-bottom:1px solid var(--border); background:#fff; position: sticky; top:0; z-index:10; }
+.header-inner { display:flex; align-items:center; justify-content:space-between; gap:1rem; }
+.brand { font-weight:700; }
+.nav { display:flex; gap:.75rem; align-items:center; }
+.nav-link { text-decoration:none; color:var(--text); border:1px solid var(--border); padding:.5rem .75rem; border-radius:.6rem; }
+.button { text-decoration:none; display:inline-block; background:var(--text); color:#fff; padding:.6rem .9rem; border-radius:.6rem; border:none; cursor:pointer; }
+.button.ghost { background:#fff; color:var(--text); border:1px solid var(--border); }
+.card { background:#fff; border:1px solid var(--border); border-radius:1rem; padding:1rem; margin:1rem 0; }
+.muted { color:var(--muted); font-size:.95rem; }
+.grid { display:grid; gap: .75rem; }
+.grid.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.grid.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.grid.seven { grid-template-columns: repeat(7, minmax(0, 1fr)); }
+.field { display:flex; flex-direction:column; gap:.35rem; }
+.field > span { font-weight:600; }
+.field input, .field select, .field textarea { border:1px solid var(--border); border-radius:.6rem; padding:.55rem .65rem; font:inherit; }
+.checklist { display:grid; gap:.5rem; }
+.table-wrap { overflow:auto; border:1px solid var(--border); border-radius:.8rem; }
+.table { width:100%; border-collapse: collapse; }
+.table th, .table td { border-bottom:1px solid var(--border); padding:.65rem; vertical-align:top; }
+.table th { text-align:left; background:#f8fafc; position: sticky; top:0; }
+.table .yn { width:4.5rem; text-align:center; }
+.actions { display:flex; gap:.5rem; margin-top:.5rem; }
+.pdf-viewer { width:100%; height: 680px; border:1px solid var(--border); border-radius:.8rem; }
+.site-footer { border-top:1px solid var(--border); background:#fff; }
+
+/* Print styles: keep it tidy for PDF */
+@media print {
+  .site-header, .site-footer, #btnDownload, #btnPreview, #btnSaveLocal, #btnClear { display:none !important; }
+  .card { break-inside: avoid; }
+  body { color:#000; }
+}
+
+
+<!-- ====================== -->
+<!-- 4) assets/demlr.js -->
+<!-- ====================== -->
+(function(){
+  const $ = (sel, ctx=document) => ctx.querySelector(sel);
+  const $$ = (sel, ctx=document) => Array.from(ctx.querySelectorAll(sel));
+
+  // Dynamic rows for Part 3A
+  const part3aBody = $('#part3aTable tbody');
+  const addP3aRowBtn = $('#addP3aRow');
+  function addP3aRow() {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><input type="text" name="p3a_id[]" placeholder="e.g., Silt Fence @ NE corner"/></td>
+      <td><input type="text" name="p3a_ok[]" placeholder="Y/N"/></td>
+      <td><input type="date" name="p3a_date[]" /></td>
+      <td><input type="text" name="p3a_actions[]" placeholder="Corrective actions..."/></td>
+      <td><input type="date" name="p3a_corrected[]" /></td>
+    `;
+    part3aBody.appendChild(tr);
+  }
+  addP3aRowBtn.addEventListener('click', addP3aRow);
+  addP3aRow(); // start with one row
+
+  // Add rows to Part 2
+  $('#addP2Row').addEventListener('click', () => {
+    const tbody = $('#part2Table tbody');
+    const ref = String.fromCharCode(65 + tbody.children.length); // A, B, C...
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${ref}</td>
+      <td><input type="text" name="p2_q_${ref}" placeholder="Enter your question text..."/></td>
+      <td><input type="radio" name="${ref}" value="Yes" /></td>
+      <td><input type="radio" name="${ref}" value="No" /></td>
+      <td><input type="radio" name="${ref}" value="N/A" /></td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  // Local save & restore
+  const STORAGE_KEY = 'demlr_form_v1';
+  const btnSaveLocal = $('#btnSaveLocal');
+  const btnClear = $('#btnClear');
+
+  function saveLocal(){
+    const data = {};
+    $$('input, select, textarea').forEach(el => {
+      if (el.type === 'radio') {
+        if (el.checked) data[el.name] = el.value;
+      } else if (el.name) {
+        if(!data[el.name]) data[el.name] = [];
+        if(el.name.endsWith('[]')) {
+          data[el.name].push(el.value);
+        } else {
+          data[el.name] = el.value;
+        }
+      }
+    });
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    alert('Saved locally.');
+  }
+
+  function loadLocal(){
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return;
+    const data = JSON.parse(raw);
+    $$('input, select, textarea').forEach(el => {
+      if(!el.name) return;
+      if(el.type === 'radio') {
+        if(data[el.name] === el.value) el.checked = true;
+      } else if(el.name.endsWith('[]')) {
+        // handled on a best-effort basis; skip here
+      } else if (data[el.name] != null) {
+        el.value = data[el.name];
+      }
+    });
+  }
+
+  function clearForm(){
+    if(!confirm('Clear all fields?')) return;
+    $$('input, select, textarea').forEach(el => {
+      if(el.type === 'radio' || el.type === 'checkbox') el.checked = false;
+      else el.value = '';
+    });
+    localStorage.removeItem(STORAGE_KEY);
+  }
+
+  btnSaveLocal.addEventListener('click', saveLocal);
+  btnClear.addEventListener('click', clearForm);
+  loadLocal();
+
+  // Footer year
+  $('#year').textContent = new Date().getFullYear();
+
+  // PDF: Preview (new tab/print dialog) and Download
+  async function captureToCanvas() {
+    const main = document.querySelector('main');
+    // expand details for better rendering, if any
+    return await html2canvas(main, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
+  }
+
+  async function createPdfBlob() {
+    const canvas = await captureToCanvas();
+    const imgData = canvas.toDataURL('image/png');
+    const { jsPDF } = window.jspdf;
+    // Portrait A4
+    const pdf = new jsPDF({ unit: 'pt', format: 'a4' });
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+
+    // Scale image to fit width
+    const imgWidth = pageWidth;
+    const imgHeight = canvas.height * (imgWidth / canvas.width);
+
+    let y = 0;
+    let remaining = imgHeight;
+
+    while (remaining > 0) {
+      pdf.addImage(imgData, 'PNG', 0, y ? 0 : 0, imgWidth, imgHeight);
+      remaining -= pageHeight;
+      if (remaining > 0) pdf.addPage();
+      y += pageHeight;
+    }
+    return pdf.output('blob');
+  }
+
+  $('#btnPreview').addEventListener('click', async (e) => {
+    e.preventDefault();
+    const blob = await createPdfBlob();
+    const url = URL.createObjectURL(blob);
+    window.open(url, '_blank');
+  });
+
+  $('#btnDownload').addEventListener('click', async (e) => {
+    e.preventDefault();
+    const blob = await createPdfBlob();
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    const name = `DEMLR_Monitoring_${(new Date()).toISOString().slice(0,10)}.pdf`;
+    a.download = name;
+    a.click();
+  });
+})();
