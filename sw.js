@@ -1,12 +1,11 @@
-// sw.js
-const CACHE_NAME = "dsr-v6";   // bump this anytime index.html/CSS/JS changes
+// sw.js — v7 hard refresh
+const CACHE = 'dsr-v7';
 const ASSETS = [
   './',
   './index.html',
   './manifest.webmanifest',
   './assets/comet.png'
 ];
-
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)));
@@ -24,7 +23,8 @@ self.addEventListener('activate', (e) => {
 
 self.addEventListener('fetch', (e) => {
   const url = new URL(e.request.url);
-  const isAsset = ASSETS.some(p => url.pathname.endsWith(p.replace('./','/')));
+  const matchList = [ ...ASSETS, './' ].map(p => p.replace('./','/'));
+  const isAsset = matchList.some(p => url.pathname.endsWith(p));
   if (isAsset) {
     e.respondWith(caches.match(e.request).then(r => r || fetch(e.request)));
   } else {
