@@ -1,5 +1,5 @@
 // sw.js
-const CACHE = 'dsr-v5';   // bump this anytime index.html/CSS/JS changes
+const CACHE_NAME = "dsr-v6";   // bump this anytime index.html/CSS/JS changes
 const ASSETS = [
   './',
   './index.html',
