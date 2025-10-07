@@ -34,7 +34,42 @@
     .card h2{font-size:16px;margin:0 0 12px 0}
     .row{display:grid;grid-template-columns:repeat(12,1fr);gap:12px;margin-bottom:10px}
     label{font-size:12px;color:var(--muted)}
-    input,select,textarea{width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:#fff;color:var(--ink)}
+    label{font-size:12px;color:var(--muted)}
+
+/* REPLACE the one-liner below with this whole block */
+input[type="text"],
+input[type="number"],
+input[type="date"],
+input[type="datetime-local"],
+input[type="email"],
+input[type="time"],
+select,
+textarea{
+  width:100%;
+  padding:10px 12px;
+  border-radius:10px;
+  border:1px solid var(--border);
+  background:#fff;
+  color:var(--ink);
+}
+
+/* ADD this new block directly under the one above */
+input[type="radio"],
+input[type="checkbox"]{
+  width:18px;
+  height:18px;
+  padding:0;
+  margin:0;
+  border:0;
+  background:transparent;
+  box-shadow:none;
+  appearance:auto;
+  -webkit-appearance:auto;
+  -moz-appearance:auto;
+}
+
+textarea{min-height:110px;resize:vertical}  /* keep this line you already have */
+
     textarea{min-height:110px;resize:vertical}
     .checklist{display:grid;gap:8px}
     .tools{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 0}
