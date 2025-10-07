@@ -2,159 +2,114 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>DEMLR Monitoring Form — White</title>
-  <link rel="stylesheet" href="assets/demlr.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>DEMLR Monitoring – Fillable Overlay</title>
+
+  <!-- Fonts / Base styles -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-  <!-- html2canvas + jsPDF -->
+
+  <!-- Page CSS -->
+  <style>
+    :root {
+      --text:#0f172a; --muted:#64748b; --border:#e5e7eb;
+      --hint:#cbd5e1; --input:#111827; --ink:#0f172a;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0;background:#fff;color:var(--text);font-family:'Inter', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif}
+
+    header{position:sticky;top:0;z-index:10;background:#fff;border-bottom:1px solid var(--border)}
+    .bar{max-width:1100px;margin:0 auto;padding:12px 16px;display:flex;gap:10px;align-items:center;justify-content:space-between}
+    .brand{font-weight:700}
+    .actions{display:flex;gap:8px;flex-wrap:wrap}
+    .btn{appearance:none;border:1px solid var(--border);background:#fff;color:var(--ink);padding:8px 12px;border-radius:10px;text-decoration:none;cursor:pointer}
+    .btn.primary{background:var(--ink);color:#fff;border-color:var(--ink)}
+    .btn.ghost{background:#fff}
+    .btn.small{padding:6px 10px;border-radius:8px;font-size:.9rem}
+
+    main{max-width:1100px;margin:0 auto;padding:16px}
+    .note{color:var(--muted);font-size:.95rem;margin:8px 0 16px}
+
+    /* PDF canvas + overlay fields */
+    .page-wrap{position:relative;margin:0 auto 18px auto;border:1px solid var(--border);border-radius:12px;overflow:hidden;background:#fff}
+    canvas.pdf-canvas{display:block;width:100%;height:auto;background:#fff}
+
+    .overlay{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;}
+    .fld{position:absolute;pointer-events:auto;}
+    .fld input,.fld textarea{
+      width:100%;height:100%;padding:6px 8px;border:1px dashed #cbd5e1;border-radius:8px;
+      background:rgba(255,255,255,.9);color:#111827;font:inherit;resize:none;
+    }
+    .fld textarea{line-height:1.25}
+    .fld input:focus,.fld textarea:focus{outline:2px solid #94a3b8}
+    .fld[data-type="radio"], .fld[data-type="checkbox"]{display:flex;align-items:center;justify-content:center}
+    .fld[data-type="radio"] input, .fld[data-type="checkbox"] input{
+      width:18px;height:18px;accent-color:#111827;border:1px solid #94a3b8;border-radius:4px;background:#fff;
+    }
+
+    .legend{display:flex;gap:8px;align-items:center;margin:8px 0}
+    .dot{width:12px;height:12px;border-radius:3px;border:1px dashed #94a3b8;background:#fff}
+
+    .pdf-ref{border:1px solid var(--border);border-radius:10px;padding:10px;margin-top:12px}
+    .pdf-viewer{width:100%;height:680px;border:1px solid var(--border);border-radius:8px}
+
+    footer{border-top:1px solid var(--border);background:#fff}
+    .foot{max-width:1100px;margin:0 auto;padding:12px 16px;color:var(--muted)}
+
+    /* Print: hide controls, show clean overlay on top of PDF render */
+    @media print {
+      header, .actions, .note, .pdf-ref { display:none !important; }
+      .fld input, .fld textarea { border-color:#000; background:#fff; }
+      .page-wrap { border:none; }
+    }
+  </style>
+
+  <!-- PDF.js (render PDF pages as canvases) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.6.82/pdf.min.mjs" type="module"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.6.82/pdf.worker.min.mjs" type="module"></script>
+
+  <!-- html2canvas + jsPDF for client-side PDF creation -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" crossorigin="anonymous"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" crossorigin="anonymous"></script>
 </head>
 <body>
-  <header class="site-header">
-    <div class="container header-inner">
-      <div class="brand">Comet — DEMLR Monitoring</div>
-      <nav class="nav">
-        <a href="index.html" class="nav-link">← Back to Daily Reports</a>
-        <a href="#" id="btnPreview" class="button ghost">Preview PDF</a>
-        <a href="#" id="btnDownload" class="button">Save PDF</a>
+  <header>
+    <div class="bar">
+      <div class="brand">Comet — DEMLR Monitoring (Fillable)</div>
+      <nav class="actions">
+        <a class="btn ghost small" href="index.html">Home</a>
+        <a class="btn ghost small" href="daily.html">Daily Reports</a>
+        <button id="toggleOutlines" class="btn small">Toggle Field Outlines</button>
+        <button id="btnPreview" class="btn ghost small">Preview PDF</button>
+        <button id="btnDownload" class="btn primary small">Save PDF</button>
       </nav>
     </div>
   </header>
 
-  <main class="container">
-    <section class="card">
-      <h1>DEMLR Monitoring Form</h1>
-      <p class="muted">Complete the form below and export to PDF for submission. The official PDF is embedded below for reference.</p>
+  <main>
+    <p class="note">
+      This page renders the <b>official DEMLR PDF</b> and places <b>fillable inputs right over the blanks</b>, so it looks like the real form.
+    </p>
 
-      <div class="grid two">
-        <label class="field">
-          <span>Project Name</span>
-          <input type="text" name="project_name" placeholder="e.g., Comet Pittsboro" />
-        </label>
-        <label class="field">
-          <span>Permit #</span>
-          <input type="text" name="permit_no" />
-        </label>
-        <label class="field">
-          <span>Approving Authority</span>
-          <input type="text" name="authority" />
-        </label>
-        <label class="field">
-          <span>Date of Plan Approval</span>
-          <input type="date" name="plan_approval" />
-        </label>
-        <label class="field">
-          <span>Expiration Date</span>
-          <input type="date" name="expiration" />
-        </label>
-        <label class="field">
-          <span>NCG010000 COC #</span>
-          <input type="text" name="coc_number" />
-        </label>
-        <label class="field">
-          <span>Date of COC Issuance</span>
-          <input type="date" name="coc_date" />
-        </label>
-      </div>
+    <!-- Where the PDF pages + overlays will be rendered -->
+    <div id="pages"></div>
 
-      <h2>Part 1A: Rainfall Data (inches)</h2>
-      <div class="grid seven">
-        <label class="field"><span>Mon</span><input type="number" step="0.01" name="rain_mon"></label>
-        <label class="field"><span>Tue</span><input type="number" step="0.01" name="rain_tue"></label>
-        <label class="field"><span>Wed</span><input type="number" step="0.01" name="rain_wed"></label>
-        <label class="field"><span>Thu</span><input type="number" step="0.01" name="rain_thu"></label>
-        <label class="field"><span>Fri</span><input type="number" step="0.01" name="rain_fri"></label>
-        <label class="field"><span>Sat</span><input type="number" step="0.01" name="rain_sat"></label>
-        <label class="field"><span>Sun</span><input type="number" step="0.01" name="rain_sun"></label>
-      </div>
-
-      <h2>Part 1B: Phase(s) of the Plan</h2>
-      <div class="checklist">
-        <label><input type="checkbox" name="phase_install"> Initial installation of controls</label>
-        <label><input type="checkbox" name="phase_cg"> Clearing & grubbing</label>
-        <label><input type="checkbox" name="phase_grading"> Completion of grading</label>
-        <label><input type="checkbox" name="phase_complete"> Completion of all land disturbing activity</label>
-        <label><input type="checkbox" name="phase_permcover"> Permanent ground cover established</label>
-      </div>
-
-      <label class="field">
-        <span>Conditions limiting inspection</span>
-        <textarea name="limits" rows="2"></textarea>
-      </label>
-
-      <h2>Part 2: Stormwater Plans & Controls</h2>
-      <div class="table-wrap">
-        <table class="table" id="part2Table">
-          <thead>
-            <tr><th>Ref</th><th>Question</th><th class="yn">Yes</th><th class="yn">No</th><th class="yn">N/A</th></tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>A</td>
-              <td>Approval letter/COC on site?</td>
-              <td><input type="radio" name="A" value="Yes"></td>
-              <td><input type="radio" name="A" value="No"></td>
-              <td><input type="radio" name="A" value="N/A"></td>
-            </tr>
-          </tbody>
-        </table>
-        <button id="addP2Row" class="button ghost" type="button">+ Add Row</button>
-      </div>
-
-      <h2>Part 3A: E&S Control Measures</h2>
-      <div class="table-wrap">
-        <table class="table" id="part3aTable">
-          <thead>
-            <tr>
-              <th>Measure / Location</th>
-              <th>Operating (Y/N)</th>
-              <th>Inspection Date</th>
-              <th>Actions Needed</th>
-              <th>Corrected Date</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-        <button id="addP3aRow" class="button ghost" type="button">+ Add Row</button>
-      </div>
-
-      <h2>Part 4: Inspector</h2>
-      <div class="grid three">
-        <label class="field"><span>Name</span><input type="text" name="inspector_name"></label>
-        <label class="field"><span>Employer</span><input type="text" name="employer"></label>
-        <label class="field"><span>Type</span>
-          <select name="inspector_type">
-            <option>FRP/Permittee</option>
-            <option>Agent/Designee</option>
-          </select>
-        </label>
-        <label class="field"><span>Address</span><input type="text" name="address"></label>
-        <label class="field"><span>Phone</span><input type="tel" name="phone"></label>
-        <label class="field"><span>Email</span><input type="email" name="email"></label>
-        <label class="field"><span>Inspection Date & Time</span><input type="datetime-local" name="inspection_dt"></label>
-      </div>
-
-      <div class="actions">
-        <button id="btnSaveLocal" class="button" type="button">Save Progress</button>
-        <button id="btnClear" class="button" type="button">Clear Form</button>
-      </div>
-    </section>
-
-    <section class="card">
-      <h2>Official DEMLR PDF (Reference)</h2>
-      <object data="DEMLR-Monitoring-Form-Rev-07012020.pdf" type="application/pdf" class="pdf-viewer">
-        <p>PDF cannot display — <a href="DEMLR-Monitoring-Form-Rev-07012020.pdf" download>download instead</a>.</p>
+    <details class="pdf-ref">
+      <summary>Reference: Official DEMLR PDF</summary>
+      <object class="pdf-viewer" data="DEMLR-Monitoring-Form-Rev-07012020.pdf" type="application/pdf">
+        <p>Your browser can’t display PDFs here. <a href="DEMLR-Monitoring-Form-Rev-07012020.pdf" download>Download instead</a>.</p>
       </object>
-    </section>
+    </details>
   </main>
 
-  <footer class="site-footer">
-    <div class="container">© <span id="year"></span> Comet Builders — DEMLR Monitoring</div>
+  <footer>
+    <div class="foot">© <span id="year"></span> Comet Builders — DEMLR Monitoring</div>
   </footer>
 
-  <script src="assets/demlr.js"></script>
+  <script type="module" src="assets/demlr.js"></script>
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+  </script>
 </body>
 </html>
