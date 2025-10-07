@@ -1,115 +1,277 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>DEMLR Monitoring – Fillable Overlay</title>
-
-  <!-- Fonts / Base styles -->
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>DEMLR Monitoring</title>
+  <meta name="description" content="DEMLR monitoring form — fill in the blanks and save drafts locally."/>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-
-  <!-- Page CSS -->
   <style>
-    :root {
-      --text:#0f172a; --muted:#64748b; --border:#e5e7eb;
-      --hint:#cbd5e1; --input:#111827; --ink:#0f172a;
+    :root{
+      --ink:#0f172a; --bg:#ffffff; --card:#ffffff; --muted:#6b7280; --border:#e5e7eb; --accent:#0ea5e9; --danger:#ef4444; --ok:#16a34a;
     }
     *{box-sizing:border-box}
-    html,body{margin:0;padding:0;background:#fff;color:var(--text);font-family:'Inter', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif}
+    html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+    a{color:#0ea5e9;text-decoration:none}
+    .wrap{max-width:1100px;margin:0 auto;padding:24px}
 
-    header{position:sticky;top:0;z-index:10;background:#fff;border-bottom:1px solid var(--border)}
-    .bar{max-width:1100px;margin:0 auto;padding:12px 16px;display:flex;gap:10px;align-items:center;justify-content:space-between}
-    .brand{font-weight:700}
-    .actions{display:flex;gap:8px;flex-wrap:wrap}
-    .btn{appearance:none;border:1px solid var(--border);background:#fff;color:var(--ink);padding:8px 12px;border-radius:10px;text-decoration:none;cursor:pointer}
+    /* Header */
+    header{position:sticky;top:0;z-index:5;background:#fff;border-bottom:1px solid var(--border)}
+    .top{display:flex;align-items:center;gap:14px;max-width:1100px;margin:0 auto;padding:14px 24px}
+    .brand{font-weight:800}
+    .actions{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+    button,.btn{border:1px solid var(--border);background:#fff;color:var(--ink);padding:10px 14px;border-radius:10px;cursor:pointer;display:inline-block}
+    button:hover,.btn:hover{background:#f3f4f6}
     .btn.primary{background:var(--ink);color:#fff;border-color:var(--ink)}
-    .btn.ghost{background:#fff}
-    .btn.small{padding:6px 10px;border-radius:8px;font-size:.9rem}
+    .btn.ok{background:var(--ok);color:#fff;border-color:var(--ok)}
+    .btn.warn{background:#b45309;color:#fff;border-color:#b45309}
+    .btn.ghost{background:#fff;border-color:var(--border)}
+    .muted{color:var(--muted);font-size:12px}
 
-    main{max-width:1100px;margin:0 auto;padding:16px}
-    .note{color:var(--muted);font-size:.95rem;margin:8px 0 16px}
+    /* Layout */
+    .grid{display:grid;gap:16px;grid-template-columns:repeat(12,1fr)}
+    .card{grid-column:span 12;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px}
+    .card h2{font-size:16px;margin:0 0 12px 0}
+    .row{display:grid;grid-template-columns:repeat(12,1fr);gap:12px;margin-bottom:10px}
+    label{font-size:12px;color:var(--muted)}
+    input,select,textarea{width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:#fff;color:var(--ink)}
+    textarea{min-height:110px;resize:vertical}
+    .checklist{display:grid;gap:8px}
+    .tools{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 0}
 
-    /* PDF canvas + overlay fields */
-    .page-wrap{position:relative;margin:0 auto 18px auto;border:1px solid var(--border);border-radius:12px;overflow:hidden;background:#fff}
-    canvas.pdf-canvas{display:block;width:100%;height:auto;background:#fff}
+    table{width:100%;border-collapse:collapse}
+    th,td{border:1px solid var(--border);padding:8px;text-align:left;vertical-align:top}
+    th{background:#f8fafc}
+    .gallery{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+    .kpi{display:flex;gap:16px;flex-wrap:wrap}
+    .kpi .box{flex:1 1 160px;background:#fafafa;border:1px solid var(--border);border-radius:12px;padding:12px}
+    .box b{font-size:20px}
 
-    .overlay{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;}
-    .fld{position:absolute;pointer-events:auto;}
-    .fld input,.fld textarea{
-      width:100%;height:100%;padding:6px 8px;border:1px dashed #cbd5e1;border-radius:8px;
-      background:rgba(255,255,255,.9);color:#111827;font:inherit;resize:none;
+    /* Responsive */
+    @media (max-width:900px){
+      .row{grid-template-columns:repeat(6,1fr)}
+      .gallery{grid-template-columns:repeat(3,1fr)}
     }
-    .fld textarea{line-height:1.25}
-    .fld input:focus,.fld textarea:focus{outline:2px solid #94a3b8}
-    .fld[data-type="radio"], .fld[data-type="checkbox"]{display:flex;align-items:center;justify-content:center}
-    .fld[data-type="radio"] input, .fld[data-type="checkbox"] input{
-      width:18px;height:18px;accent-color:#111827;border:1px solid #94a3b8;border-radius:4px;background:#fff;
+    @media (max-width:600px){
+      .row{grid-template-columns:repeat(2,1fr)}
+      .gallery{grid-template-columns:repeat(2,1fr)}
     }
 
-    .legend{display:flex;gap:8px;align-items:center;margin:8px 0}
-    .dot{width:12px;height:12px;border-radius:3px;border:1px dashed #94a3b8;background:#fff}
-
-    .pdf-ref{border:1px solid var(--border);border-radius:10px;padding:10px;margin-top:12px}
-    .pdf-viewer{width:100%;height:680px;border:1px solid var(--border);border-radius:8px}
-
-    footer{border-top:1px solid var(--border);background:#fff}
-    .foot{max-width:1100px;margin:0 auto;padding:12px 16px;color:var(--muted)}
-
-    /* Print: hide controls, show clean overlay on top of PDF render */
-    @media print {
-      header, .actions, .note, .pdf-ref { display:none !important; }
-      .fld input, .fld textarea { border-color:#000; background:#fff; }
-      .page-wrap { border:none; }
+    /* Print */
+    @media print{
+      header,.actions,.tools,.btn{display:none !important}
+      body{background:#fff !important;color:#000 !important}
+      .card{break-inside:avoid;border:1px solid #000 !important}
+      input,select,textarea{background:#fff !important;color:#000 !important;-webkit-text-fill-color:#000 !important;border:1px solid #000 !important}
+      th,td{border-color:#000 !important;color:#000 !important}
+      th{background:#fff !important;color:#000 !important}
     }
   </style>
-
-  <!-- PDF.js (render PDF pages as canvases) -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.6.82/pdf.min.mjs" type="module"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.6.82/pdf.worker.min.mjs" type="module"></script>
-
-  <!-- html2canvas + jsPDF for client-side PDF creation -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" crossorigin="anonymous"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" crossorigin="anonymous"></script>
 </head>
 <body>
   <header>
-    <div class="bar">
-      <div class="brand">Comet — DEMLR Monitoring (Fillable)</div>
-      <nav class="actions">
-        <a class="btn ghost small" href="index.html">Home</a>
-        <a class="btn ghost small" href="daily.html">Daily Reports</a>
-        <button id="toggleOutlines" class="btn small">Toggle Field Outlines</button>
-        <button id="btnPreview" class="btn ghost small">Preview PDF</button>
-        <button id="btnDownload" class="btn primary small">Save PDF</button>
-      </nav>
+    <div class="top">
+      <div class="brand">DEMLR Monitoring</div>
+      <div class="actions">
+        <a class="btn ghost" href="index.html">Home</a>
+        <a class="btn ghost" href="daily.html">Daily Reports</a>
+        <button class="btn primary" id="saveBtn">Save Draft</button>
+        <button class="btn" id="newBtn">New</button>
+        <button class="btn ok" id="printBtn">Print / PDF</button>
+      </div>
     </div>
   </header>
 
-  <main>
-    <p class="note">
-      This page renders the <b>official DEMLR PDF</b> and places <b>fillable inputs right over the blanks</b>, so it looks like the real form.
-    </p>
+  <div class="wrap">
+    <section class="grid">
+      <!-- Project Meta -->
+      <div class="card">
+        <h2>Project Information</h2>
+        <div class="row">
+          <div style="grid-column:span 6">
+            <label for="project_name">Project Name</label>
+            <input id="project_name" placeholder="e.g., Comet Pittsboro"/>
+          </div>
+          <div style="grid-column:span 3">
+            <label for="permit_no">Permit #</label>
+            <input id="permit_no"/>
+          </div>
+          <div style="grid-column:span 3">
+            <label for="authority">Approving Authority</label>
+            <input id="authority"/>
+          </div>
+        </div>
+        <div class="row">
+          <div style="grid-column:span 3">
+            <label for="plan_approval">Date of Plan Approval</label>
+            <input id="plan_approval" type="date"/>
+          </div>
+          <div style="grid-column:span 3">
+            <label for="expiration">Expiration Date</label>
+            <input id="expiration" type="date"/>
+          </div>
+          <div style="grid-column:span 3">
+            <label for="coc_number">NCG010000 COC #</label>
+            <input id="coc_number"/>
+          </div>
+          <div style="grid-column:span 3">
+            <label for="coc_date">Date of COC Issuance</label>
+            <input id="coc_date" type="date"/>
+          </div>
+        </div>
+      </div>
 
-    <!-- Where the PDF pages + overlays will be rendered -->
-    <div id="pages"></div>
+      <!-- Part 1A: Rainfall Data -->
+      <div class="card">
+        <h2>Part 1A — Rainfall Data (inches)</h2>
+        <div class="row">
+          <div style="grid-column:span 1"><label for="rain_mon">Mon</label><input id="rain_mon" type="number" step="0.01"></div>
+          <div style="grid-column:span 1"><label for="rain_tue">Tue</label><input id="rain_tue" type="number" step="0.01"></div>
+          <div style="grid-column:span 1"><label for="rain_wed">Wed</label><input id="rain_wed" type="number" step="0.01"></div>
+          <div style="grid-column:span 1"><label for="rain_thu">Thu</label><input id="rain_thu" type="number" step="0.01"></div>
+          <div style="grid-column:span 1"><label for="rain_fri">Fri</label><input id="rain_fri" type="number" step="0.01"></div>
+          <div style="grid-column:span 1"><label for="rain_sat">Sat</label><input id="rain_sat" type="number" step="0.01"></div>
+          <div style="grid-column:span 1"><label for="rain_sun">Sun</label><input id="rain_sun" type="number" step="0.01"></div>
+        </div>
+      </div>
 
-    <details class="pdf-ref">
-      <summary>Reference: Official DEMLR PDF</summary>
-      <object class="pdf-viewer" data="DEMLR-Monitoring-Form-Rev-07012020.pdf" type="application/pdf">
-        <p>Your browser can’t display PDFs here. <a href="DEMLR-Monitoring-Form-Rev-07012020.pdf" download>Download instead</a>.</p>
-      </object>
-    </details>
-  </main>
+      <!-- Part 1B: Phases -->
+      <div class="card">
+        <h2>Part 1B — Phase(s) of the Plan</h2>
+        <div class="checklist">
+          <label><input type="checkbox" id="phase_install"> Initial installation of erosion/sediment controls</label>
+          <label><input type="checkbox" id="phase_cg"> Clearing &amp; grubbing</label>
+          <label><input type="checkbox" id="phase_grading"> Completion of grading that requires ground cover</label>
+          <label><input type="checkbox" id="phase_complete"> Completion of all land-disturbing activity</label>
+          <label><input type="checkbox" id="phase_permcover"> Permanent ground cover established</label>
+        </div>
+        <div class="row" style="margin-top:10px">
+          <div style="grid-column:span 12">
+            <label for="limits">Any conditions limiting completion of inspection?</label>
+            <textarea id="limits" placeholder="Explain conditions and areas that were inaccessible..."></textarea>
+          </div>
+        </div>
+      </div>
 
-  <footer>
-    <div class="foot">© <span id="year"></span> Comet Builders — DEMLR Monitoring</div>
-  </footer>
+      <!-- Part 2: Stormwater Plans and Controls -->
+      <div class="card">
+        <h2>Part 2 — Stormwater Plans &amp; Controls</h2>
+        <div class="tools">
+          <button class="btn" id="addP2Row">+ Add Row</button>
+          <button class="btn ghost" id="clearP2">Clear</button>
+          <span class="muted">Use Y/N/NA in the columns to match the form.</span>
+        </div>
+        <div style="overflow:auto;margin-top:8px">
+          <table id="part2Table">
+            <thead>
+              <tr>
+                <th style="width:60px">Ref</th>
+                <th>Question</th>
+                <th style="width:70px">Yes</th>
+                <th style="width:70px">No</th>
+                <th style="width:70px">N/A</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>A</td>
+                <td>Approval letter/COC &amp; NPDES CGP on site (electronic copy acceptable)?</td>
+                <td><input /></td><td><input /></td><td><input /></td>
+              </tr>
+              <tr>
+                <td>B</td>
+                <td>Approved plan on site and current?</td>
+                <td><input /></td><td><input /></td><td><input /></td>
+              </tr>
+              <tr>
+                <td>C</td>
+                <td>Erosion/sediment controls installed and operating properly?</td>
+                <td><input /></td><td><input /></td><td><input /></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
 
-  <script type="module" src="assets/demlr.js"></script>
-  <script>
-    document.getElementById('year').textContent = new Date().getFullYear();
-  </script>
+      <!-- Part 3A: E&S Control Measures -->
+      <div class="card">
+        <h2>Part 3A — Erosion &amp; Sedimentation Control Measures</h2>
+        <div class="tools">
+          <button class="btn" id="addP3aRow">+ Add Row</button>
+          <button class="btn ghost" id="clearP3a">Clear</button>
+        </div>
+        <div style="overflow:auto;margin-top:8px">
+          <table id="part3aTable">
+            <thead>
+              <tr>
+                <th>Measure ID / Location</th>
+                <th>Operating Properly? (Y/N)</th>
+                <th>Inspection Date</th>
+                <th>Actions Needed</th>
+                <th>Date Prev. Action Observed as Corrected</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Signature -->
+      <div class="card">
+        <h2>Part 4 — Signature of Inspector</h2>
+        <div class="row">
+          <div style="grid-column:span 4">
+            <label for="inspector_name">Inspector Name</label>
+            <input id="inspector_name"/>
+          </div>
+          <div style="grid-column:span 4">
+            <label for="employer">Employer</label>
+            <input id="employer"/>
+          </div>
+          <div style="grid-column:span 4">
+            <label for="inspector_type">Inspector Type</label>
+            <select id="inspector_type">
+              <option>FRP/Permittee</option>
+              <option>Agent/Designee</option>
+            </select>
+          </div>
+        </div>
+        <div class="row">
+          <div style="grid-column:span 6">
+            <label for="address">Address</label>
+            <input id="address"/>
+          </div>
+          <div style="grid-column:span 3">
+            <label for="phone">Phone</label>
+            <input id="phone"/>
+          </div>
+          <div style="grid-column:span 3">
+            <label for="email">Email</label>
+            <input id="email" type="email"/>
+          </div>
+        </div>
+        <div class="row">
+          <div style="grid-column:span 4">
+            <label for="inspection_dt">Date &amp; Time of Inspection</label>
+            <input id="inspection_dt" type="datetime-local"/>
+          </div>
+        </div>
+      </div>
+
+      <!-- History -->
+      <div class="card">
+        <h2>Saved DEMLR Drafts (this browser)</h2>
+        <div class="tools">
+          <button class="btn warn" id="wipeAll">Delete All Drafts</button>
+          <span class="muted">(Drafts save to your browser only.)</span>
+        </div>
+        <div id="history"></div>
+      </div>
+    </section>
+  </div>
+
+  <script src="assets/demlr.js"></script>
 </body>
 </html>
