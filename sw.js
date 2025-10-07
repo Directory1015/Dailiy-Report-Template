@@ -1,11 +1,12 @@
-// sw.js — cache static assets & enable offline; bump version to refresh cached files
-const CACHE = 'dsr-v4'; // bump this when you change index.html
+// sw.js
+const CACHE = 'dsr-v5';   // bump this anytime index.html/CSS/JS changes
 const ASSETS = [
   './',
   './index.html',
   './manifest.webmanifest',
   './assets/comet.png'
 ];
+
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)));
