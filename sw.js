@@ -1,5 +1,5 @@
-// sw.js — v7 hard refresh
-const CACHE = 'dsr-v7';
+// sw.js — v8
+const CACHE = 'dsr-v8';
 const ASSETS = [
   './',
   './index.html',
