@@ -2,7 +2,7 @@
   const $ = (sel, ctx=document) => ctx.querySelector(sel);
   const $$ = (sel, ctx=document) => Array.from(ctx.querySelectorAll(sel));
 
-  // Dynamic rows for Part 3A
+  // --- Part 3A dynamic rows ---
   const part3aBody = $('#part3aTable tbody');
   const addP3aRowBtn = $('#addP3aRow');
   function addP3aRow() {
@@ -19,10 +19,10 @@
   addP3aRowBtn.addEventListener('click', addP3aRow);
   addP3aRow(); // start with one row
 
-  // Add rows to Part 2
+  // --- Part 2 add row ---
   $('#addP2Row').addEventListener('click', () => {
     const tbody = $('#part2Table tbody');
-    const ref = String.fromCharCode(65 + tbody.children.length); // A, B, C...
+    const ref = String.fromCharCode(65 + tbody.children.length);
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td>${ref}</td>
@@ -34,7 +34,7 @@
     tbody.appendChild(tr);
   });
 
-  // Local save & restore
+  // --- Local save ---
   const STORAGE_KEY = 'demlr_form_v1';
   const btnSaveLocal = $('#btnSaveLocal');
   const btnClear = $('#btnClear');
@@ -46,11 +46,8 @@
         if (el.checked) data[el.name] = el.value;
       } else if (el.name) {
         if(!data[el.name]) data[el.name] = [];
-        if(el.name.endsWith('[]')) {
-          data[el.name].push(el.value);
-        } else {
-          data[el.name] = el.value;
-        }
+        if(el.name.endsWith('[]')) data[el.name].push(el.value);
+        else data[el.name] = el.value;
       }
     });
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
@@ -65,11 +62,8 @@
       if(!el.name) return;
       if(el.type === 'radio') {
         if(data[el.name] === el.value) el.checked = true;
-      } else if(el.name.endsWith('[]')) {
-        // handled on a best-effort basis; skip here
-      } else if (data[el.name] != null) {
-        el.value = data[el.name];
-      }
+      } else if(el.name.endsWith('[]')) { /* skip array restore */ }
+      else if (data[el.name] != null) el.value = data[el.name];
     });
   }
 
@@ -86,10 +80,10 @@
   btnClear.addEventListener('click', clearForm);
   loadLocal();
 
-  // Footer year
+  // --- Footer year ---
   $('#year').textContent = new Date().getFullYear();
 
-  // PDF: Preview (new tab/print dialog) and Download
+  // --- PDF generation ---
   async function captureToCanvas() {
     const main = document.querySelector('main');
     return await html2canvas(main, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
@@ -107,7 +101,6 @@
 
     let y = 0;
     let remaining = imgHeight;
-
     while (remaining > 0) {
       pdf.addImage(imgData, 'PNG', 0, y ? 0 : 0, imgWidth, imgHeight);
       remaining -= pageHeight;
@@ -129,8 +122,7 @@
     const blob = await createPdfBlob();
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    const name = `DEMLR_Monitoring_${(new Date()).toISOString().slice(0,10)}.pdf`;
-    a.download = name;
+    a.download = `DEMLR_Monitoring_${(new Date()).toISOString().slice(0,10)}.pdf`;
     a.click();
   });
 })();
