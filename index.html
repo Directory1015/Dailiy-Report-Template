@@ -44,6 +44,11 @@
     .kpi .box{flex:1 1 160px;background:#0f1730;border:1px solid #263452;border-radius:12px;padding:12px}
     .box b{font-size:20px}
 
+    /* Section notes (bottom, roomy) */
+    .section-notes{margin-top:10px}
+    .section-notes label{display:block;margin-bottom:6px;color:#cfe1ff}
+    .section-notes textarea{min-height:120px}
+
     /* Responsive */
     @media (max-width:900px){
       .row{grid-template-columns:repeat(6,1fr)}
@@ -54,38 +59,39 @@
       .gallery{grid-template-columns:repeat(2,1fr)}
     }
 
-    /* Print as PDF — force dark text; keep KPI tiles readable */
+    /* Print as PDF — high contrast + no clipping */
     @media print{
       header,.actions,.tools,.pill,.btn{display:none !important}
 
-      /* Global: white background, black text/borders for legibility */
-      html, body, .card, input, select, textarea, table, th, td, label, h1, h2, h3, h4, h5, h6, p, b, strong, i, em, small, span, a {
-        background:#fff !important;
-        color:#000 !important;
-        border-color:#000 !important;
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
-      }
-      .card{break-inside:avoid;border:1px solid #000 !important}
+      body{background:#fff !important;color:#000 !important}
+      .card{break-inside:avoid;background:#fff !important;border:1px solid #000 !important}
       input,select,textarea{
+        background:#fff !important;color:#000 !important;
+        -webkit-text-fill-color:#000 !important;border:1px solid #000 !important;
+      }
+      th,td{border-color:#000 !important;color:#000 !important}
+      th{background:#fff !important;color:#000 !important}
+
+      /* Hide per-row Notes + action columns in print */
+      #laborTable th:nth-child(6), #laborTable td:nth-child(6),
+      #deliveryTable th:nth-child(5), #deliveryTable td:nth-child(5),
+      #inspTable th:nth-child(5), #inspTable td:nth-child(5),
+      #equipTable th:nth-child(5), #equipTable td:nth-child(5),
+      #laborTable th:last-child, #laborTable td:last-child,
+      #deliveryTable th:last-child, #deliveryTable td:last-child,
+      #inspTable th:last-child, #inspTable td:last-child,
+      #equipTable th:last-child, #equipTable td:last-child { display:none !important; }
+
+      /* KPI tiles – readable even if background graphics are off */
+      .kpi .box{
         background:#fff !important;
         color:#000 !important;
-        -webkit-text-fill-color:#000 !important;
-        border:1px solid #000 !important;
+        border:2px solid #000 !important;
       }
-      th{
-        background:#fff !important;
-        color:#000 !important;
-        border:1px solid #000 !important;
-      }
-      td{
-        border:1px solid #000 !important;
-        color:#000 !important;
-      }
-      /* KPI tiles: keep dark tile with white text for contrast */
-      .kpi .box{ background:#0f1730 !important; border-color:#0f1730 !important; color:#fff !important; }
-      .kpi .box label, .kpi .box b{ color:#fff !important; }
-      a{ text-decoration:none !important; }
+      .kpi .box label, .kpi .box b{ color:#000 !important; }
+
+      /* Section notes get extra room in print */
+      .section-notes textarea{min-height:150px}
     }
   </style>
 </head>
@@ -184,6 +190,10 @@
             <tbody></tbody>
           </table>
         </div>
+        <div class="section-notes">
+          <label for="laborNotes">Notes (Manpower & Vendors)</label>
+          <textarea id="laborNotes" placeholder="Add general notes for manpower/vendors here..."></textarea>
+        </div>
       </div>
 
       <!-- Work Performed -->
@@ -212,12 +222,17 @@
                 <th>Vendor</th>
                 <th>Material / Qty</th>
                 <th>For Area</th>
+                <th>Notes</th>
                 <th>Received By</th>
                 <th>—</th>
               </tr>
             </thead>
             <tbody></tbody>
           </table>
+        </div>
+        <div class="section-notes">
+          <label for="deliveryNotes">Notes (Deliveries)</label>
+          <textarea id="deliveryNotes" placeholder="Add general delivery notes..."></textarea>
         </div>
       </div>
 
@@ -242,6 +257,10 @@
             </thead>
             <tbody></tbody>
           </table>
+        </div>
+        <div class="section-notes">
+          <label for="inspNotes">Notes (Inspections & Tests)</label>
+          <textarea id="inspNotes" placeholder="Add inspection/testing notes..."></textarea>
         </div>
       </div>
 
@@ -293,6 +312,10 @@
             <tbody></tbody>
           </table>
         </div>
+        <div class="section-notes">
+          <label for="equipNotes">Notes (Equipment)</label>
+          <textarea id="equipNotes" placeholder="Add equipment notes..."></textarea>
+        </div>
       </div>
 
       <!-- Photos -->
@@ -339,9 +362,8 @@
     </section>
   </div>
 
-  <!-- ========= Robust JS (delegated handlers + print fix) ========= -->
+  <!-- Robust JS (delegated handlers + print fix) -->
   <script>
-  /* ---------- Helpers ---------- */
   const $  = (s, r=document) => r.querySelector(s);
   const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
   const STORAGE_KEY = 'dailyReportDrafts_v1';
@@ -376,7 +398,6 @@
     rows.forEach(r=> addRow(tbody, r.map((v,idx)=> inputForCell(idx, v, sel))));
   }
 
-  /* ---------- Form IO ---------- */
   function getForm(){
     const labor = tableToJSON('#laborTable');
     const deliveries = tableToJSON('#deliveryTable');
@@ -400,24 +421,24 @@
       title: $('#title')?.value || '',
       preparedAt: $('#preparedAt')?.value || '',
       labor, deliveries, inspections, equipment, photos,
+      laborNotes: $('#laborNotes')?.value || '',
+      deliveryNotes: $('#deliveryNotes')?.value || '',
+      inspNotes: $('#inspNotes')?.value || '',
+      equipNotes: $('#equipNotes')?.value || '',
       savedAt: new Date().toISOString()
     }
   }
   function setForm(data){
-    if($('#date'))          $('#date').value = data.date || '';
-    if($('#project'))       $('#project').value = data.project || '';
-    if($('#customProject')) $('#customProject').value = data.customProject || '';
-    if($('#weather'))       $('#weather').value = data.weather || '';
-    if($('#tempRange'))     $('#tempRange').value = data.tempRange || '';
-    if($('#precip'))        $('#precip').value = data.precip || '';
-    if($('#wind'))          $('#wind').value = data.wind || '';
-    if($('#workPerformed')) $('#workPerformed').value = data.workPerformed || '';
-    if($('#safetyObservations')) $('#safetyObservations').value = data.safetyObservations || '';
-    if($('#incidents'))     $('#incidents').value = data.incidents || '';
-    if($('#delays'))        $('#delays').value = data.delays || '';
-    if($('#preparedBy'))    $('#preparedBy').value = data.preparedBy || '';
-    if($('#title'))         $('#title').value = data.title || '';
-    if($('#preparedAt'))    $('#preparedAt').value = data.preparedAt || '';
+    const map = [
+      ['#date','date'],['#project','project'],['#customProject','customProject'],
+      ['#weather','weather'],['#tempRange','tempRange'],['#precip','precip'],['#wind','wind'],
+      ['#workPerformed','workPerformed'],['#safetyObservations','safetyObservations'],
+      ['#incidents','incidents'],['#delays','delays'],['#preparedBy','preparedBy'],
+      ['#title','title'],['#preparedAt','preparedAt'],
+      ['#laborNotes','laborNotes'],['#deliveryNotes','deliveryNotes'],
+      ['#inspNotes','inspNotes'],['#equipNotes','equipNotes'],
+    ];
+    map.forEach(([sel,key])=>{ if($(sel)) $(sel).value = data[key] || ''; });
     jsonToTable('#laborTable', data.labor||[]);
     jsonToTable('#deliveryTable', data.deliveries||[]);
     jsonToTable('#inspTable', data.inspections||[]);
@@ -427,7 +448,6 @@
     updateKPIs();
   }
 
-  /* ---------- UX ---------- */
   function toast(msg){
     const t = document.createElement('div');
     t.textContent = msg;
@@ -437,7 +457,6 @@
     setTimeout(()=> t.remove(), 1500);
   }
 
-  /* ---------- Photos & KPIs ---------- */
   function addPhotoToGallery(src){
     const img = document.createElement('img');
     img.src = src; $('#gallery')?.appendChild(img);
@@ -451,47 +470,33 @@
     if($('#kpiInsp'))    $('#kpiInsp').textContent = tableToJSON('#inspTable').length;
   }
 
-  /* ---------- Init & Safe Bindings ---------- */
   document.addEventListener('DOMContentLoaded', () => {
-    // seed initial empty rows
     function seed(){
       addRow($('#laborTable tbody'),    [inputForCell(0,'' ,'#laborTable'), inputForCell(1,'' ,'#laborTable'), inputForCell(2,'','#laborTable'), inputForCell(3,'','#laborTable'), inputForCell(4,'','#laborTable'), inputForCell(5,'','#laborTable')]);
-      addRow($('#deliveryTable tbody'), [inputForCell(0,'' ,'#deliveryTable'), inputForCell(1,'' ,'#deliveryTable'), inputForCell(2,'','#deliveryTable'), inputForCell(3,'','#deliveryTable'), inputForCell(4,'','#deliveryTable')]);
+      addRow($('#deliveryTable tbody'), [inputForCell(0,'' ,'#deliveryTable'), inputForCell(1,'' ,'#deliveryTable'), inputForCell(2,'','#deliveryTable'), inputForCell(3,'','#deliveryTable'), inputForCell(4,'','#deliveryTable'), inputForCell(5,'','#deliveryTable')]);
       addRow($('#inspTable tbody'),     [inputForCell(0,'' ,'#inspTable'),     inputForCell(1,'' ,'#inspTable'),     inputForCell(2,'','#inspTable'),     inputForCell(3,'','#inspTable'),     inputForCell(4,'','#inspTable')]);
       addRow($('#equipTable tbody'),    [inputForCell(0,'' ,'#equipTable'),    inputForCell(1,'' ,'#equipTable'),    inputForCell(2,'','#equipTable'),    inputForCell(3,'','#equipTable'),    inputForCell(4,'','#equipTable')]);
     }
 
-    // single delegated click handler (covers Add/Clear/Remove + header)
     document.addEventListener('click', (e) => {
       const btn = e.target.closest('button');
       if (!btn) return;
 
-      // remove-row buttons
       if (btn.hasAttribute('data-remove')) {
         btn.closest('tr')?.remove();
-        updateKPIs();
-        return;
+        updateKPIs(); return;
       }
 
       switch (btn.id) {
-        // header actions
         case 'saveBtn': {
           const draft = getForm();
           const ds = getDrafts();
           const i = ds.findIndex(d => d.id === draft.id);
           if(i>=0) ds[i] = draft; else ds.push(draft);
-          setDrafts(ds);
-          currentId = draft.id;
-          renderHistory();
-          toast('Saved ✅');
-          break;
+          setDrafts(ds); currentId = draft.id; renderHistory(); toast('Saved ✅'); break;
         }
         case 'newBtn': {
-          if (confirm('Clear the form for a new report?')) {
-            currentId = null;
-            setForm({});
-            seed();
-          }
+          if (confirm('Clear the form for a new report?')) { currentId = null; setForm({}); seed(); }
           break;
         }
         case 'exportBtn': {
@@ -500,42 +505,29 @@
           const a = document.createElement('a');
           a.href = URL.createObjectURL(blob);
           a.download = `daily-report_${data.date||'undated'}.json`;
-          a.click();
-          break;
+          a.click(); break;
         }
-        case 'printBtn': {
-          setTimeout(()=> window.print(), 0);
-          break;
-        }
+        case 'printBtn': { setTimeout(()=> window.print(), 0); break; }
 
-        // tables — add/clear
         case 'addLabor':
-          addRow($('#laborTable tbody'), [inputForCell(0,'' ,'#laborTable'), inputForCell(1,'' ,'#laborTable'), inputForCell(2,'','#laborTable'), inputForCell(3,'','#laborTable'), inputForCell(4,'','#laborTable'), inputForCell(5,'','#laborTable')]);
-          break;
+          addRow($('#laborTable tbody'), [inputForCell(0,'' ,'#laborTable'), inputForCell(1,'' ,'#laborTable'), inputForCell(2,'','#laborTable'), inputForCell(3,'','#laborTable'), inputForCell(4,'','#laborTable'), inputForCell(5,'','#laborTable')]); break;
         case 'clearLabor':
-          if(confirm('Clear labor table?')) { $('#laborTable tbody').innerHTML=''; updateKPIs(); }
-          break;
+          if(confirm('Clear labor table?')) { $('#laborTable tbody').innerHTML=''; updateKPIs(); } break;
 
         case 'addDelivery':
-          addRow($('#deliveryTable tbody'), [inputForCell(0,'' ,'#deliveryTable'), inputForCell(1,'' ,'#deliveryTable'), inputForCell(2,'','#deliveryTable'), inputForCell(3,'','#deliveryTable'), inputForCell(4,'','#deliveryTable')]);
-          break;
+          addRow($('#deliveryTable tbody'), [inputForCell(0,'' ,'#deliveryTable'), inputForCell(1,'' ,'#deliveryTable'), inputForCell(2,'','#deliveryTable'), inputForCell(3,'','#deliveryTable'), inputForCell(4,'','#deliveryTable'), inputForCell(5,'','#deliveryTable')]); break;
         case 'clearDelivery':
-          if(confirm('Clear deliveries?')) { $('#deliveryTable tbody').innerHTML=''; updateKPIs(); }
-          break;
+          if(confirm('Clear deliveries?')) { $('#deliveryTable tbody').innerHTML=''; updateKPIs(); } break;
 
         case 'addInsp':
-          addRow($('#inspTable tbody'), [inputForCell(0,'' ,'#inspTable'), inputForCell(1,'' ,'#inspTable'), inputForCell(2,'','#inspTable'), inputForCell(3,'','#inspTable'), inputForCell(4,'','#inspTable')]);
-          break;
+          addRow($('#inspTable tbody'), [inputForCell(0,'' ,'#inspTable'), inputForCell(1,'' ,'#inspTable'), inputForCell(2,'','#inspTable'), inputForCell(3,'','#inspTable'), inputForCell(4,'','#inspTable')]); break;
         case 'clearInsp':
-          if(confirm('Clear inspections?')) { $('#inspTable tbody').innerHTML=''; updateKPIs(); }
-          break;
+          if(confirm('Clear inspections?')) { $('#inspTable tbody').innerHTML=''; updateKPIs(); } break;
 
         case 'addEquip':
-          addRow($('#equipTable tbody'), [inputForCell(0,'' ,'#equipTable'), inputForCell(1,'' ,'#equipTable'), inputForCell(2,'','#equipTable'), inputForCell(3,'','#equipTable'), inputForCell(4,'','#equipTable')]);
-          break;
+          addRow($('#equipTable tbody'), [inputForCell(0,'' ,'#equipTable'), inputForCell(1,'' ,'#equipTable'), inputForCell(2,'','#equipTable'), inputForCell(3,'','#equipTable'), inputForCell(4,'','#equipTable')]); break;
         case 'clearEquip':
-          if(confirm('Clear equipment?')) { $('#equipTable tbody').innerHTML=''; updateKPIs(); }
-          break;
+          if(confirm('Clear equipment?')) { $('#equipTable tbody').innerHTML=''; updateKPIs(); } break;
 
         default:
           if (btn.dataset.load) loadDraft(btn.dataset.load);
@@ -543,13 +535,11 @@
       }
     });
 
-    // inputs update KPIs as you type
     document.addEventListener('input', (e) => {
       const el = e.target;
       if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT')) updateKPIs();
     });
 
-    // history render (delegated clicks handle buttons)
     function renderHistory(){
       const drafts = getDrafts().sort((a,b)=> (b.date||'').localeCompare(a.date||''));
       const el = $('#history');
@@ -566,7 +556,6 @@
     }
     window.renderHistory = renderHistory;
 
-    // init
     const today = new Date();
     if($('#date')) $('#date').valueAsDate = today;
     if($('#preparedAt')) $('#preparedAt').value = today.toTimeString().slice(0,5);
@@ -577,6 +566,7 @@
   </script>
 </body>
 </html>
+
 
 
 
