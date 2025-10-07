@@ -52,7 +52,7 @@
       color:var(--ink);
     }
 
-    /* Radios/checkboxes: force system appearance so the dots/boxes show */
+    /* Radios/checkboxes: make sure bubbles actually show */
     input[type="radio"],
     input[type="checkbox"]{
       display:inline-block !important;
@@ -80,8 +80,18 @@
     .small{font-size:12px;color:var(--muted)}
     .info{background:#f8fafc;border:1px solid var(--border);border-radius:10px;padding:10px}
 
-    /* Center choice controls in Part 2 */
+    /* Center the Y/N/NA bubbles in Part 2 cells */
     .ynna-cell{display:flex;align-items:center;justify-content:center}
+
+    /* Extra insurance: target Part 2 tables specifically */
+    #part2aTable .ynna-cell input[type="radio"],
+    #part2bTable .ynna-cell input[type="radio"],
+    #part2cTable .ynna-cell input[type="radio"],
+    #part2dTable .ynna-cell input[type="radio"]{
+      display:inline-block !important;
+      width:18px !important;
+      height:18px !important;
+    }
 
     @media (max-width:900px){ .row{grid-template-columns:repeat(6,1fr)} }
     @media (max-width:600px){ .row{grid-template-columns:repeat(2,1fr)} }
@@ -274,7 +284,7 @@
               <tr>
                 <th>Measure ID / Location and Description</th>
                 <th>Reference(s)</th>
-                <th>Operating Properly?</th>
+                <th>Operating Properly? (Y/N)</th>
                 <th>Inspection Date</th>
                 <th>Describe Actions Needed</th>
                 <th>Date Previous Action(s) Observed as Corrected</th>
@@ -302,10 +312,10 @@
             <thead>
               <tr>
                 <th>Stormwater Discharge Outfall ID / Location</th>
-                <th>Visible Sedimentation in Streams/Wetlands/Outside Site Limits?</th>
-                <th>Increase in Stream Turbidity from Discharge?</th>
-                <th>Visible Erosion below SDO?</th>
-                <th>Visible oil sheen / floating or suspended solids / discoloration?</th>
+                <th>Any Visible Sedimentation in Streams/Wetlands/Outside Site Limits? (Y/N)</th>
+                <th>Any Increase in Stream Turbidity from Discharge? (Y/N)</th>
+                <th>Any Visible Erosion below SDO? (Y/N)</th>
+                <th>Any visible oil sheen / floating or suspended solids / discoloration? (Y/N)</th>
                 <th>Inspection Date</th>
                 <th>Describe Actions Needed</th>
                 <th>Date Previous Action(s) Observed as Corrected</th>
@@ -331,9 +341,9 @@
               <tr>
                 <th>Site area description and location where activities have temporarily or permanently ceased</th>
                 <th>Time Limit for Ground Cover</th>
-                <th>Have stabilization measures been installed?</th>
+                <th>Have stabilization measures been installed? (Y/N)</th>
                 <th>Temporary or Permanent (T/P)</th>
-                <th>Is Ground Cover sufficient to restrain erosion?</th>
+                <th>Is Ground Cover sufficient to restrain erosion? (Y/N)</th>
                 <th>Original Inspection Date</th>
                 <th>Describe Actions Needed</th>
                 <th>Date Previous Action(s) Observed as Corrected</th>
@@ -360,7 +370,7 @@
                 <th>Measure ID or Location and Description</th>
                 <th>Proposed Dimensions (ft.)</th>
                 <th>Actual Dimensions (ft.)</th>
-                <th>Significant Deviation from Plan?</th>
+                <th>Significant Deviation from Plan? (Y/N)</th>
                 <th>Date measure observed as installed / altered / relocated / removed</th>
                 <th>Installed (I) / Altered (A) / Relocated (R) / Removed (X)</th>
                 <th style="width:56px">—</th>
@@ -403,17 +413,14 @@
     </section>
   </div>
 
-  <!-- Inline JS: radios in Part 2 + Part 3; full app logic -->
+  <!-- Inline JS: Part 2 radios + full app logic -->
   <script>
   (function(){
     function $(s, r){ return (r||document).querySelector(s); }
     function $$(s, r){ return Array.prototype.slice.call((r||document).querySelectorAll(s)); }
 
-    const STORAGE_KEY = 'demlrDrafts_v5'; // bumped for Part 3 radios
+    const STORAGE_KEY = 'demlrDrafts_v6'; // bump to avoid old cached drafts interfering
     let currentId = null;
-
-    // Row index counters for naming radio groups in Part 3
-    let p3aIdx = 0, p3bIdx = 0, p3cIdx = 0, p3dIdx = 0;
 
     function uid(){ return Math.random().toString(36).slice(2) + Date.now().toString(36); }
     function getDrafts(){ try{ return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }catch(e){ return []; } }
@@ -442,166 +449,59 @@
       });
     }
 
-    // ---- Utility: serialize a td that may contain multiple inputs (e.g., radios) ----
-    function serializeCell(td){
-      // Prefer checked radio if present
-      const checkedRadio = td.querySelector('input[type="radio"]:checked');
-      if (checkedRadio) return checkedRadio.value || '';
-      const cb = td.querySelector('input[type="checkbox"]');
-      if (cb) return cb.checked ? 'Y' : '';
-      const el = td.querySelector('input,textarea,select');
-      return el ? el.value : td.textContent;
+    // ---- Part 3 helpers (text inputs) ----
+    function addRow(tbody, cells){
+      if(!tbody) return;
+      const tr = document.createElement('tr');
+      tr.innerHTML = cells.map(function(c){ return '<td>'+c+'</td>'; }).join('') +
+                     '<td style="width:56px"><button type="button" class="btn ghost" data-remove>✕</button></td>';
+      tbody.appendChild(tr);
     }
-
     function tableToJSON(sel, hasRemoveCol){
       const rows = $$(sel+' tbody tr');
       return rows.map(function(tr){
         const tds = Array.prototype.slice.call(tr.querySelectorAll('td'));
         const take = hasRemoveCol ? tds.slice(0, -1) : tds;
-        return take.map(serializeCell);
+        return take.map(function(td){
+          const el = td.querySelector('input,textarea,select');
+          if (!el) return td.textContent;
+          return el.value;
+        });
       });
     }
-
-    // ---- Builders for Part 3 rows (with radios for Y/N columns) ----
-    function buildP3aRow(data, index){
-      const tr = document.createElement('tr');
-      const v = data || [];
-      const yn = (v[2]||'').toUpperCase();
-      tr.innerHTML = `
-        <td><input value="${v[0]||''}" placeholder="Measure ID / Location and Description"/></td>
-        <td><input value="${v[1]||''}" placeholder="Ref letter(s) e.g., A,C"/></td>
-        <td class="ynna-cell">
-          <label style="display:flex;gap:6px;align-items:center">
-            <input type="radio" name="p3a_op_${index}" value="Y" ${yn==='Y'?'checked':''}> Y
-          </label>
-          &nbsp;&nbsp;
-          <label style="display:flex;gap:6px;align-items:center">
-            <input type="radio" name="p3a_op_${index}" value="N" ${yn==='N'?'checked':''}> N
-          </label>
-        </td>
-        <td><input type="date" value="${v[3]||''}"/></td>
-        <td><textarea>${v[4]||''}</textarea></td>
-        <td><input type="date" value="${v[5]||''}"/></td>
-        <td style="width:56px"><button type="button" class="btn ghost" data-remove>✕</button></td>
-      `;
-      return tr;
-    }
-
-    function buildP3bRow(data, index){
-      const v = data || [];
-      function ynCell(name, val){
-        const up = (val||'').toUpperCase();
-        return `
-          <div class="ynna-cell" style="gap:10px">
-            <label style="display:flex;gap:6px;align-items:center">
-              <input type="radio" name="${name}" value="Y" ${up==='Y'?'checked':''}> Y
-            </label>
-            <label style="display:flex;gap:6px;align-items:center">
-              <input type="radio" name="${name}" value="N" ${up==='N'?'checked':''}> N
-            </label>
-          </div>`;
-      }
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td><input value="${v[0]||''}" placeholder="Outfall ID / Location"/></td>
-        <td>${ynCell('p3b_sed_'+index, v[1])}</td>
-        <td>${ynCell('p3b_turb_'+index, v[2])}</td>
-        <td>${ynCell('p3b_eros_'+index, v[3])}</td>
-        <td>${ynCell('p3b_sheen_'+index, v[4])}</td>
-        <td><input type="date" value="${v[5]||''}"/></td>
-        <td><textarea>${v[6]||''}</textarea></td>
-        <td><input type="date" value="${v[7]||''}"/></td>
-        <td style="width:56px"><button type="button" class="btn ghost" data-remove>✕</button></td>
-      `;
-      return tr;
-    }
-
-    function buildP3cRow(data, index){
-      const v = data || [];
-      const inst = (v[2]||'').toUpperCase();
-      const suff = (v[4]||'').toUpperCase();
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td><input value="${v[0]||''}" placeholder="Area description and location"/></td>
-        <td><input value="${v[1]||''}" placeholder="Time limit"/></td>
-        <td class="ynna-cell" style="gap:10px">
-          <label style="display:flex;gap:6px;align-items:center">
-            <input type="radio" name="p3c_inst_${index}" value="Y" ${inst==='Y'?'checked':''}> Y
-          </label>
-          <label style="display:flex;gap:6px;align-items:center">
-            <input type="radio" name="p3c_inst_${index}" value="N" ${inst==='N'?'checked':''}> N
-          </label>
-        </td>
-        <td><input value="${v[3]||''}" placeholder="T/P"/></td>
-        <td class="ynna-cell" style="gap:10px">
-          <label style="display:flex;gap:6px;align-items:center">
-            <input type="radio" name="p3c_suff_${index}" value="Y" ${suff==='Y'?'checked':''}> Y
-          </label>
-          <label style="display:flex;gap:6px;align-items:center">
-            <input type="radio" name="p3c_suff_${index}" value="N" ${suff==='N'?'checked':''}> N
-          </label>
-        </td>
-        <td><input type="date" value="${v[5]||''}"/></td>
-        <td><textarea>${v[6]||''}</textarea></td>
-        <td><input type="date" value="${v[7]||''}"/></td>
-        <td style="width:56px"><button type="button" class="btn ghost" data-remove>✕</button></td>
-      `;
-      return tr;
-    }
-
-    function buildP3dRow(data, index){
-      const v = data || [];
-      const dev = (v[3]||'').toUpperCase();
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td><input value="${v[0]||''}" placeholder="Measure ID / Location and Description"/></td>
-        <td><input value="${v[1]||''}" placeholder="Proposed ft."/></td>
-        <td><input value="${v[2]||''}" placeholder="Actual ft."/></td>
-        <td class="ynna-cell" style="gap:10px">
-          <label style="display:flex;gap:6px;align-items:center">
-            <input type="radio" name="p3d_dev_${index}" value="Y" ${dev==='Y'?'checked':''}> Y
-          </label>
-          <label style="display:flex;gap:6px;align-items:center">
-            <input type="radio" name="p3d_dev_${index}" value="N" ${dev==='N'?'checked':''}> N
-          </label>
-        </td>
-        <td><input type="date" value="${v[4]||''}"/></td>
-        <td><input value="${v[5]||''}" placeholder="I/A/R/X"/></td>
-        <td style="width:56px"><button type="button" class="btn ghost" data-remove>✕</button></td>
-      `;
-      return tr;
-    }
-
-    // ---- Add row helpers (increments counters; supports optional data) ----
-    function addP3aRow(data){
-      const tbody = $('#part3aTable tbody');
-      const tr = buildP3aRow(data, p3aIdx++); tbody.appendChild(tr);
-    }
-    function addP3bRow(data){
-      const tbody = $('#part3bTable tbody');
-      const tr = buildP3bRow(data, p3bIdx++); tbody.appendChild(tr);
-    }
-    function addP3cRow(data){
-      const tbody = $('#part3cTable tbody');
-      const tr = buildP3cRow(data, p3cIdx++); tbody.appendChild(tr);
-    }
-    function addP3dRow(data){
-      const tbody = $('#part3dTable tbody');
-      const tr = buildP3dRow(data, p3dIdx++); tbody.appendChild(tr);
-    }
-
-    // ---- Restore Part 3 tables from saved arrays ----
-    function restoreP3(table, rows){
-      const map = {
-        'part3aTable':[addP3aRow, () => { p3aIdx = 0; }],
-        'part3bTable':[addP3bRow, () => { p3bIdx = 0; }],
-        'part3cTable':[addP3cRow, () => { p3cIdx = 0; }],
-        'part3dTable':[addP3dRow, () => { p3dIdx = 0; }],
-      };
-      const tbody = $('#'+table+' tbody'); if(!tbody) return;
-      const [adder, reset] = map[table]; reset();
+    function jsonToTable(sel, rows, makeCell){
+      const tbody = $(sel+' tbody'); if(!tbody) return;
       tbody.innerHTML = '';
-      (rows||[]).forEach(function(r){ adder(r); });
+      rows.forEach(function(r){
+        const cells = r.map(function(v, idx){ return makeCell(idx, v); });
+        addRow(tbody, cells);
+      });
+    }
+    function p3aCell(idx, v){
+      if (idx === 2) return '<input value="'+(v||'')+'" placeholder="Y/N"/>';
+      if (idx === 3) return '<input type="date" value="'+(v||'')+'"/>';
+      if (idx === 4) return '<textarea>'+(v||'')+'</textarea>';
+      if (idx === 5) return '<input type="date" value="'+(v||'')+'"/>';
+      return '<input value="'+(v||'')+'"/>';
+    }
+    function p3bCell(idx, v){
+      if ([1,2,3,4].includes(idx)) return '<input value="'+(v||'')+'" placeholder="Y/N"/>';
+      if ([5,7].includes(idx))    return '<input type="date" value="'+(v||'')+'"/>';
+      if (idx === 6)              return '<textarea>'+(v||'')+'</textarea>';
+      return '<input value="'+(v||'')+'"/>';
+    }
+    function p3cCell(idx, v){
+      if (idx === 2 || idx === 4) return '<input value="'+(v||'')+'" placeholder="Y/N"/>';
+      if (idx === 3)              return '<input value="'+(v||'')+'" placeholder="T/P"/>';
+      if (idx === 5 || idx === 7) return '<input type="date" value="'+(v||'')+'"/>';
+      if (idx === 6)              return '<textarea>'+(v||'')+'</textarea>';
+      return '<input value="'+(v||'')+'"/>';
+    }
+    function p3dCell(idx, v){
+      if (idx === 3) return '<input value="'+(v||'')+'" placeholder="Y/N"/>';
+      if (idx === 4) return '<input type="date" value="'+(v||'')+'"/>';
+      if (idx === 5) return '<input value="'+(v||'')+'" placeholder="I/A/R/X"/>';
+      return '<input value="'+(v||'')+'"/>';
     }
 
     // ---- Collect / Set entire form ----
@@ -686,10 +586,10 @@
       part2FromJSON('#part2cTable', d.part2c);
       part2FromJSON('#part2dTable', d.part2d);
 
-      restoreP3('part3aTable', d.part3a);
-      restoreP3('part3bTable', d.part3b);
-      restoreP3('part3cTable', d.part3c);
-      restoreP3('part3dTable', d.part3d);
+      jsonToTable('#part3aTable', d.part3a || [], p3aCell);
+      jsonToTable('#part3bTable', d.part3b || [], p3bCell);
+      jsonToTable('#part3cTable', d.part3c || [], p3cCell);
+      jsonToTable('#part3dTable', d.part3d || [], p3dCell);
 
       setVal('#inspector_name', d.inspector_name);
       setVal('#employer', d.employer);
@@ -751,8 +651,7 @@
     $('#newBtn')?.addEventListener('click', function(ev){ ev.preventDefault();
       if (confirm('Clear the form for a new DEMLR entry?')) {
         currentId = null;
-        // reset tables & counters
-        p3aIdx = p3bIdx = p3cIdx = p3dIdx = 0;
+        // reset tables
         $('#part3aTable tbody').innerHTML = '';
         $('#part3bTable tbody').innerHTML = '';
         $('#part3cTable tbody').innerHTML = '';
@@ -761,22 +660,94 @@
       }
     });
     $('#printBtn')?.addEventListener('click', function(ev){ ev.preventDefault(); setTimeout(function(){ window.print(); }, 0); });
-    $('#clearP3a')?.addEventListener('click', function(){ if(confirm('Clear Part 3A table?')) { $('#part3aTable tbody').innerHTML=''; p3aIdx=0; } });
-    $('#clearP3b')?.addEventListener('click', function(){ if(confirm('Clear Part 3B table?')) { $('#part3bTable tbody').innerHTML=''; p3bIdx=0; } });
-    $('#clearP3c')?.addEventListener('click', function(){ if(confirm('Clear Part 3C table?')) { $('#part3cTable tbody').innerHTML=''; p3cIdx=0; } });
-    $('#clearP3d')?.addEventListener('click', function(){ if(confirm('Clear Part 3D table?')) { $('#part3dTable tbody').innerHTML=''; p3dIdx=0; } });
+    $('#clearP3a')?.addEventListener('click', function(){ if(confirm('Clear Part 3A table?')) $('#part3aTable tbody').innerHTML=''; });
+    $('#clearP3b')?.addEventListener('click', function(){ if(confirm('Clear Part 3B table?')) $('#part3bTable tbody').innerHTML=''; });
+    $('#clearP3c')?.addEventListener('click', function(){ if(confirm('Clear Part 3C table?')) $('#part3cTable tbody').innerHTML=''; });
+    $('#clearP3d')?.addEventListener('click', function(){ if(confirm('Clear Part 3D table?')) $('#part3dTable tbody').innerHTML=''; });
 
-    $('#addP3aRow')?.addEventListener('click', function(){ addP3aRow([]); });
-    $('#addP3bRow')?.addEventListener('click', function(){ addP3bRow([]); });
-    $('#addP3cRow')?.addEventListener('click', function(){ addP3cRow([]); });
-    $('#addP3dRow')?.addEventListener('click', function(){ addP3dRow([]); });
+    $('#addP3aRow')?.addEventListener('click', function(){
+      addRow($('#part3aTable tbody'), [
+        '<input placeholder="Measure ID / Location and Description"/>',
+        '<input placeholder="Ref letter(s) e.g., A,C"/>',
+        '<input placeholder="Y/N"/>',
+        '<input type="date"/>',
+        '<textarea placeholder="Corrective actions..."></textarea>',
+        '<input type="date"/>'
+      ]);
+    });
+    $('#addP3bRow')?.addEventListener('click', function(){
+      addRow($('#part3bTable tbody'), [
+        '<input placeholder="Outfall ID / Location"/>',
+        '<input placeholder="Y/N"/>',
+        '<input placeholder="Y/N"/>',
+        '<input placeholder="Y/N"/>',
+        '<input placeholder="Y/N"/>',
+        '<input type="date"/>',
+        '<textarea placeholder="Corrective actions..."></textarea>',
+        '<input type="date"/>'
+      ]);
+    });
+    $('#addP3cRow')?.addEventListener('click', function(){
+      addRow($('#part3cTable tbody'), [
+        '<input placeholder="Area description and location"/>',
+        '<input placeholder="Time limit"/>',
+        '<input placeholder="Y/N"/>',
+        '<input placeholder="T/P"/>',
+        '<input placeholder="Y/N"/>',
+        '<input type="date"/>',
+        '<textarea placeholder="Corrective actions..."></textarea>',
+        '<input type="date"/>'
+      ]);
+    });
+    $('#addP3dRow')?.addEventListener('click', function(){
+      addRow($('#part3dTable tbody'), [
+        '<input placeholder="Measure ID / Location and Description"/>',
+        '<input placeholder="Proposed ft."/>',
+        '<input placeholder="Actual ft."/>',
+        '<input placeholder="Y/N"/>',
+        '<input type="date"/>',
+        '<input placeholder="I/A/R/X"/>'
+      ]);
+    });
 
     // ---- Seed ----
     function seed(){
-      addP3aRow([]);
-      addP3bRow([]);
-      addP3cRow([]);
-      addP3dRow([]);
+      addRow($('#part3aTable tbody'), [
+        '<input placeholder="Measure ID / Location and Description"/>',
+        '<input placeholder="Ref letter(s) e.g., A,C"/>',
+        '<input placeholder="Y/N"/>',
+        '<input type="date"/>',
+        '<textarea placeholder="Corrective actions..."></textarea>',
+        '<input type="date"/>'
+      ]);
+      addRow($('#part3bTable tbody'), [
+        '<input placeholder="Outfall ID / Location"/>',
+        '<input placeholder="Y/N"/>',
+        '<input placeholder="Y/N"/>',
+        '<input placeholder="Y/N"/>',
+        '<input placeholder="Y/N"/>',
+        '<input type="date"/>',
+        '<textarea placeholder="Corrective actions..."></textarea>',
+        '<input type="date"/>'
+      ]);
+      addRow($('#part3cTable tbody'), [
+        '<input placeholder="Area description and location"/>',
+        '<input placeholder="Time limit"/>',
+        '<input placeholder="Y/N"/>',
+        '<input placeholder="T/P"/>',
+        '<input placeholder="Y/N"/>',
+        '<input type="date"/>',
+        '<textarea placeholder="Corrective actions..."></textarea>',
+        '<input type="date"/>'
+      ]);
+      addRow($('#part3dTable tbody'), [
+        '<input placeholder="Measure ID / Location and Description"/>',
+        '<input placeholder="Proposed ft."/>',
+        '<input placeholder="Actual ft."/>',
+        '<input placeholder="Y/N"/>',
+        '<input type="date"/>',
+        '<input placeholder="I/A/R/X"/>'
+      ]);
     }
 
     document.addEventListener('DOMContentLoaded', function(){
