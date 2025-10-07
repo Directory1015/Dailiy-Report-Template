@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Daily Site Report</title>
+  <title>Daily Reports</title>
   <meta name="description" content="Lightweight daily construction report web app. Works on GitHub Pages. Saves to localStorage. Export to JSON or Print to PDF." />
   <style>
     :root{
@@ -13,7 +13,11 @@
     html,body{margin:0;padding:0;font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:#e9eef6}
     a{color:var(--brand)}
     .wrap{max-width:1100px;margin:0 auto;padding:24px}
+
+    /* Header: sticky on desktop, NOT sticky on mobile */
     header{position:sticky;top:0;z-index:5;background:linear-gradient(180deg,rgba(11,15,26,.95),rgba(11,15,26,.75));backdrop-filter:saturate(1.2) blur(6px);border-bottom:1px solid #1f2a44}
+    @media (max-width:900px){ header{ position:static; } }
+
     .top{display:flex;align-items:center;gap:14px;max-width:1100px;margin:0 auto;padding:14px 24px}
     .logo{width:42px;height:42px;border-radius:12px;background:#0a1222;border:1px solid #203152;display:grid;place-items:center;font-weight:800}
     h1{font-size:18px;margin:0}
@@ -44,15 +48,12 @@
     .kpi .box{flex:1 1 160px;background:#0f1730;border:1px solid #263452;border-radius:12px;padding:12px}
     .box b{font-size:20px}
 
-    /* make row "Notes" cells grow nicely */
+    /* auto-growing row Notes */
     td textarea.grow{
-      min-height:42px;
-      line-height:1.3;
-      resize:vertical; /* allow manual resize too */
-      overflow:hidden; /* auto-grow JS will expand height */
+      min-height:42px; line-height:1.3; resize:vertical; overflow:hidden;
     }
 
-    /* Responsive */
+    /* Responsive tweaks */
     @media (max-width:900px){
       .row{grid-template-columns:repeat(6,1fr)}
       .gallery{grid-template-columns:repeat(3,1fr)}
@@ -62,29 +63,48 @@
       .gallery{grid-template-columns:repeat(2,1fr)}
     }
 
-    /* Print as PDF — high contrast */
+    /* Print as PDF — high contrast, no sticky artifacts */
     @media print{
       header,.actions,.tools,.pill,.btn{display:none !important}
       body{background:#fff !important;color:#000 !important}
       .card{break-inside:avoid;background:#fff !important;border:1px solid #000 !important}
-      input,select,textarea{
-        background:#fff !important;color:#000 !important;
-        -webkit-text-fill-color:#000 !important;border:1px solid #000 !important;
-      }
+      input,select,textarea{background:#fff !important;color:#000 !important;-webkit-text-fill-color:#000 !important;border:1px solid #000 !important}
       th,td{border-color:#000 !important;color:#000 !important}
       th{background:#fff !important;color:#000 !important}
-
-      /* KPI boxes readable in print */
       .kpi .box{ background:#fff !important; color:#000 !important; border:2px solid #000 !important; }
       .kpi .box label, .kpi .box b{ color:#000 !important; }
     }
   </style>
 </head>
 <body>
+
+  <!-- Anti-stale updater (bump version when you deploy) -->
+  <script>
+    const APP_VERSION = '2025-10-07-03';
+    if (localStorage.getItem('app_version') !== APP_VERSION) {
+      (async () => {
+        try {
+          if ('serviceWorker' in navigator) {
+            const regs = await navigator.serviceWorker.getRegistrations();
+            await Promise.all(regs.map(r => r.unregister()));
+            const keys = await caches.keys();
+            await Promise.all(keys.map(k => caches.delete(k)));
+          }
+        } finally {
+          localStorage.setItem('app_version', APP_VERSION);
+          location.reload();
+        }
+      })();
+    }
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.addEventListener('controllerchange', () => location.reload());
+    }
+  </script>
+
   <header>
     <div class="top">
       <div class="logo">DR</div>
-      <h1>Daily Site Report</h1>
+      <h1>Daily Reports</h1>
       <div class="actions">
         <button class="btn primary" id="saveBtn">Save Draft</button>
         <button class="btn" id="newBtn">New</button>
@@ -152,7 +172,7 @@
         </div>
       </div>
 
-      <!-- Manpower & Vendors -->
+      <!-- Manpower & Vendors (with Building + growing Notes) -->
       <div class="card">
         <h2>Manpower & Vendors</h2>
         <div class="tools">
@@ -164,7 +184,7 @@
             <thead>
               <tr>
                 <th>Company / Trade</th>
-                <th>Building</th> <!-- NEW -->
+                <th>Building</th>
                 <th>Supervisor</th>
                 <th># Crew</th>
                 <th>Time On</th>
@@ -332,8 +352,21 @@
     </section>
   </div>
 
+  <!-- Error toast (helps catch silent JS errors) -->
   <script>
-  /* ---------- Helpers ---------- */
+    window.addEventListener('error', (e) => {
+      const msg = e && e.message ? e.message : 'Unknown script error';
+      const t = document.createElement('div');
+      t.textContent = 'Script error: ' + msg;
+      t.style.position='fixed';t.style.left='16px';t.style.bottom='16px';
+      t.style.padding='8px 12px';t.style.background='#b91c1c';t.style.color='#fff';
+      t.style.borderRadius='8px';t.style.zIndex=9999;
+      document.body.appendChild(t); setTimeout(()=>t.remove(), 4000);
+    });
+  </script>
+
+  <!-- Main app JS -->
+  <script>
   const $  = (s, r=document) => r.querySelector(s);
   const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
   const STORAGE_KEY = 'dailyReportDrafts_v1';
@@ -343,25 +376,19 @@
   function getDrafts(){ try{ return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }catch{ return []; } }
   function setDrafts(arr){ localStorage.setItem(STORAGE_KEY, JSON.stringify(arr)); }
 
-  /* return correct input for each cell: numbers, growing notes, etc. */
+  function escapeHtml(s){ return String(s).replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[m])); }
   function inputForCell(idx, val, tableSel){
-    const numberCol =
-      (tableSel==='#laborTable' && idx===3) || // labor: #Crew moved to index 3
-      (tableSel==='#equipTable' && idx===2);
+    const numberCol = (tableSel==='#laborTable' && idx===3) || (tableSel==='#equipTable' && idx===2);
     const notesCol =
       (tableSel==='#laborTable' && idx===6) ||
       (tableSel==='#deliveryTable' && idx===4) ||
       (tableSel==='#inspTable' && idx===4) ||
       (tableSel==='#equipTable' && idx===4);
-
     if (notesCol) {
       const v = val ? String(val).replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[m])) : '';
       return `<textarea class="grow">${v}</textarea>`;
     }
     return `<input ${numberCol? 'type="number" min="0"':''} value="${val?escapeHtml(val):''}" />`;
-  }
-  function escapeHtml(s){
-    return String(s).replace(/[&<>"']/g, m=> ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[m]));
   }
 
   function addRow(tbody, cells){
@@ -369,7 +396,6 @@
     const tr = document.createElement('tr');
     tr.innerHTML = cells.map(c=> `<td>${c}</td>`).join('') + `<td><button class="btn ghost" data-remove>✕</button></td>`;
     tbody.appendChild(tr);
-    // auto-grow any note textareas in this row
     tr.querySelectorAll('textarea.grow').forEach(autoGrow);
     updateKPIs();
   }
@@ -387,7 +413,6 @@
     rows.forEach(r=> addRow(tbody, r.map((v,idx)=> inputForCell(idx, v, sel))));
   }
 
-  /* ---------- Form IO ---------- */
   function getForm(){
     const labor = tableToJSON('#laborTable');
     const deliveries = tableToJSON('#deliveryTable');
@@ -432,7 +457,6 @@
     updateKPIs();
   }
 
-  /* ---------- UX ---------- */
   function toast(msg){
     const t = document.createElement('div');
     t.textContent = msg;
@@ -442,36 +466,28 @@
     setTimeout(()=> t.remove(), 1500);
   }
 
-  /* ---------- Photos & KPIs ---------- */
   function addPhotoToGallery(src){
     const img = document.createElement('img');
     img.src = src; $('#gallery')?.appendChild(img);
   }
   function updateKPIs(){
     const labor = tableToJSON('#laborTable');
-    // #Crew moved to index 3
-    const totalCrew = labor.reduce((sum,row)=> sum + (parseInt(row[3]||0)||0), 0);
+    const totalCrew = labor.reduce((sum,row)=> sum + (parseInt(row[3]||0)||0), 0); // #Crew index 3
     if($('#kpiCrew'))    $('#kpiCrew').textContent = totalCrew;
     if($('#kpiVendors')) $('#kpiVendors').textContent = new Set(labor.map(r=> r[0])).size || 0;
     if($('#kpiIssues'))  $('#kpiIssues').textContent = ($('#delays')?.value.trim() ? 1 : 0) + ($('#incidents')?.value.trim()?1:0);
     if($('#kpiInsp'))    $('#kpiInsp').textContent = tableToJSON('#inspTable').length;
   }
 
-  /* ---------- Auto-grow textareas ---------- */
-  function autoGrow(el){
-    if (!el) return;
-    el.style.height = 'auto';
-    el.style.height = (el.scrollHeight + 2) + 'px';
-  }
+  function autoGrow(el){ if (!el) return; el.style.height='auto'; el.style.height=(el.scrollHeight+2)+'px'; }
+
   document.addEventListener('input', (e) => {
     const el = e.target;
     if (el && el.matches('textarea.grow')) autoGrow(el);
     if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT')) updateKPIs();
   });
 
-  /* ---------- Init & delegated clicks ---------- */
   document.addEventListener('DOMContentLoaded', () => {
-    // seed initial empty rows (note: labor got an extra Building column; Notes at index 6)
     function seed(){
       addRow($('#laborTable tbody'), [
         inputForCell(0,'' ,'#laborTable'),
@@ -542,8 +558,7 @@
             inputForCell(4,'' ,'#laborTable'),
             inputForCell(5,'' ,'#laborTable'),
             inputForCell(6,'' ,'#laborTable')
-          ]);
-          break;
+          ]); break;
         case 'clearLabor':
           if(confirm('Clear labor table?')) { $('#laborTable tbody').innerHTML=''; updateKPIs(); } break;
 
@@ -555,8 +570,7 @@
             inputForCell(3,'' ,'#deliveryTable'),
             inputForCell(4,'' ,'#deliveryTable'),
             inputForCell(5,'' ,'#deliveryTable')
-          ]);
-          break;
+          ]); break;
         case 'clearDelivery':
           if(confirm('Clear deliveries?')) { $('#deliveryTable tbody').innerHTML=''; updateKPIs(); } break;
 
@@ -567,8 +581,7 @@
             inputForCell(2,'' ,'#inspTable'),
             inputForCell(3,'' ,'#inspTable'),
             inputForCell(4,'' ,'#inspTable')
-          ]);
-          break;
+          ]); break;
         case 'clearInsp':
           if(confirm('Clear inspections?')) { $('#inspTable tbody').innerHTML=''; updateKPIs(); } break;
 
@@ -579,8 +592,7 @@
             inputForCell(2,'' ,'#equipTable'),
             inputForCell(3,'' ,'#equipTable'),
             inputForCell(4,'' ,'#equipTable')
-          ]);
-          break;
+          ]); break;
         case 'clearEquip':
           if(confirm('Clear equipment?')) { $('#equipTable tbody').innerHTML=''; updateKPIs(); } break;
 
@@ -606,7 +618,6 @@
     }
     window.renderHistory = renderHistory;
 
-    // init
     const today = new Date();
     if($('#date')) $('#date').valueAsDate = today;
     if($('#preparedAt')) $('#preparedAt').value = today.toTimeString().slice(0,5);
@@ -615,7 +626,7 @@
     updateKPIs();
   });
 
-  // simple gallery helpers
+  // photos
   $('#photoInput')?.addEventListener('change', (e)=>{
     const files = Array.from(e.target.files||[]);
     files.forEach(f=>{
@@ -626,11 +637,13 @@
   });
   $('#clearPhotos')?.addEventListener('click', ()=> { if(confirm('Clear photos?')) $('#gallery').innerHTML=''; });
 
-  // history wipe
+  // wipe all drafts
   $('#wipeAll')?.addEventListener('click', ()=> { if(confirm('Delete ALL drafts saved in this browser?')) { localStorage.removeItem(STORAGE_KEY); document.querySelector('#history').innerHTML=''; }});
   </script>
 </body>
 </html>
+
+
 
 
 
