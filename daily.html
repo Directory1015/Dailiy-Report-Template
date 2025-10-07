@@ -22,7 +22,7 @@
     .logo{width:42px;height:42px;border-radius:12px;background:#0a1222;border:1px solid #203152;display:grid;place-items:center;font-weight:800}
     h1{font-size:18px;margin:0}
     .actions{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
-    button,.btn{border:1px solid #29406b;background:#16223a;color:#e9eef6;padding:10px 14px;border-radius:10px;cursor:pointer}
+    button,.btn{border:1px solid #29406b;background:#16223a;color:#e9eef6;padding:10px 14px;border-radius:10px;cursor:pointer;text-decoration:none;display:inline-block}
     button:hover,.btn:hover{background:#1a2a49}
     .btn.primary{background:linear-gradient(180deg,#335ba8,#23437e);border-color:#2a4581}
     .btn.success{background:linear-gradient(180deg,#2e7d32,#1e5c22);border-color:#2e7d32}
@@ -115,6 +115,9 @@
       <div class="logo">DR</div>
       <h1>Daily Reports</h1>
       <div class="actions">
+        <!-- NEW: Home button back to landing page -->
+        <a class="btn ghost" href="index.html">Home</a>
+
         <button class="btn primary" id="saveBtn">Save Draft</button>
         <button class="btn" id="newBtn">New</button>
         <button class="btn" id="exportBtn">Export JSON</button>
@@ -685,6 +688,8 @@
   </script>
 </body>
 </html>
+
+
 
 
 
