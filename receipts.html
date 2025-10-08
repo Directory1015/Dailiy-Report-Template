@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Field Reporting Hub — Receipts</title>
   <meta name="description" content="Snap & send company receipts to accounting via EmailJS." />
+  <!-- CSP: allow EmailJS + inline styles -->
   <meta http-equiv="Content-Security-Policy" content="
     default-src 'self';
     img-src 'self' data: blob:;
@@ -14,35 +15,45 @@
   ">
   <style>
     :root{
-      --ink:#0b1220; --bg:#0f172a; --card:#141c2f; --muted:#94a3b8; --accent:#27c27d; --red:#e11d48; --ring:rgba(39,194,125,.45);
+      --white:#ffffff; --bg:#f8fafc; --ink:#0f172a; --muted:#6b7280;
+      --card:#ffffff; --border:#e5e7eb; --blue:#2563eb; --blue-ghost:rgba(37,99,235,.06);
+      --accent:#22c55e; --red:#e11d48; --ring:rgba(37,99,235,.28);
     }
     *{box-sizing:border-box}
-    html,body{margin:0;padding:0;background:linear-gradient(180deg,#0a1022,#0b1220);color:#e5e7eb;font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+    html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
+      font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
     .wrap{max-width:860px;margin:0 auto;padding:24px}
     header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
-    header a{color:#e5e7eb;text-decoration:none;opacity:.85}
-    header a:hover{opacity:1;text-decoration:underline}
-    .card{background:var(--card);border:1px solid #1f2937;border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.35);overflow:hidden}
-    .card-head{padding:16px 18px;border-bottom:1px solid #1f2937;display:flex;gap:12px;align-items:center}
-    .badge{font-size:12px;background:#0ea5e9;color:#001018;padding:4px 8px;border-radius:999px}
+    header a{color:var(--blue);text-decoration:none}
+    header a:hover{text-decoration:underline}
+    .pill{display:inline-flex;gap:8px;align-items:center;border:1px solid var(--blue);
+      background:var(--blue-ghost);color:var(--blue);padding:6px 10px;border-radius:999px;font-size:12px}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:16px;
+      box-shadow:0 8px 24px rgba(0,0,0,.08);overflow:hidden}
+    .card-head{padding:16px 18px;border-bottom:1px solid var(--border);display:flex;gap:12px;align-items:center}
+    .badge{font-size:12px;background:var(--blue);color:#fff;padding:4px 8px;border-radius:999px}
     .grid{display:grid;gap:16px;padding:18px}
     @media(min-width:760px){.grid{grid-template-columns:1fr 1fr}}
-    label{display:block;font-size:14px;color:#cbd5e1;margin-bottom:6px}
-    input,select,textarea,button{width:100%;padding:10px 12px;border-radius:10px;border:1px solid #24354a;background:#0c1324;color:#e5e7eb;outline:none}
-    input:focus,select:focus,textarea:focus{box-shadow:0 0 0 3px var(--ring);border-color:#2a9c6f}
+    label{display:block;font-size:14px;color:#0f172a;margin-bottom:6px}
+    input,select,textarea,button{width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--border);
+      background:#fff;color:#0f172a;outline:none}
+    input:focus,select:focus,textarea:focus{box-shadow:0 0 0 3px var(--ring);border-color:var(--blue)}
     textarea{resize:vertical;min-height:82px}
     .row{display:grid;gap:14px}
     .actions{display:flex;flex-wrap:wrap;gap:12px}
     .btn{cursor:pointer;border:none}
-    .btn-primary{background:linear-gradient(180deg,#2dd4bf,#10b981);color:#051311;font-weight:600}
-    .btn-ghost{background:#0c1324;border:1px solid #223148}
-    .btn-danger{background:linear-gradient(180deg,#fb7185,#e11d48);font-weight:600}
+    .btn-primary{background:var(--blue);color:#fff;font-weight:700}
+    .btn-ghost{background:transparent;border:1px solid var(--blue);color:var(--blue)}
+    .btn-danger{background:linear-gradient(180deg,#fb7185,#e11d48);color:#fff;font-weight:700}
     .hint{font-size:12px;color:var(--muted)}
-    .preview{display:flex;align-items:center;justify-content:center;background:#0a1220;border:1px dashed #334155;border-radius:12px;min-height:260px;position:relative;overflow:hidden}
+    .preview{display:flex;align-items:center;justify-content:center;background:#fff;border:1px dashed var(--border);
+      border-radius:12px;min-height:260px;position:relative;overflow:hidden}
     .preview canvas{max-width:100%;height:auto;display:block}
-    .pill{display:inline-flex;gap:8px;align-items:center;background:#0c1324;border:1px solid #223148;color:#cbd5e1;padding:6px 10px;border-radius:999px;font-size:12px}
-    .success{border-left:4px solid var(--accent);background:#0f2a20;padding:10px 12px;border-radius:8px;color:#d1fae5}
-    .error{border-left:4px solid var(--red);background:#2a0f16;padding:10px 12px;border-radius:8px;color:#ffe4e6}
+    .tag{display:inline-flex;gap:6px;align-items:center;color:#0f172a;background:#eef2ff;border:1px solid #c7d2fe;
+      padding:6px 10px;border-radius:999px;font-size:12px}
+    .success{border-left:4px solid var(--accent);background:#ecfdf5;padding:10px 12px;border-radius:8px;color:#064e3b}
+    .error{border-left:4px solid var(--red);background:#fff1f2;padding:10px 12px;border-radius:8px;color:#9f1239}
+    .inline{display:flex;gap:10px;align-items:center}
   </style>
 </head>
 <body>
@@ -56,14 +67,28 @@
       <div class="card-head">
         <span class="badge">New</span>
         <div>
-          <div style="font-weight:700">Send a Receipt to Accounting</div>
-          <div class="hint">Snaps/Uploads, optional compression, emails to <strong>accts@cometdev.com</strong>.</div>
+          <div style="font-weight:700">Send a Receipt</div>
+          <div class="hint">Snaps/Uploads, optional compression. Sends via EmailJS with photo attached.</div>
         </div>
       </div>
 
       <form id="receiptForm" class="grid" autocomplete="on">
         <!-- Left column -->
         <div class="row">
+          <div class="inline" style="gap:12px">
+            <label for="sendTo" style="margin:0">Send To</label>
+            <select id="sendTo" name="sendTo" style="max-width:220px">
+              <option value="accounting" selected>Accounting (accts@cometdev.com)</option>
+              <option value="me">Me (test)</option>
+            </select>
+          </div>
+
+          <div id="myEmailWrap" style="display:none">
+            <label for="myEmail">My Email (for test)</label>
+            <input id="myEmail" type="email" placeholder="you@cometdev.com" />
+            <div class="hint">Only used when “Me (test)” is selected.</div>
+          </div>
+
           <div>
             <label for="date">Date</label>
             <input id="date" name="date" type="date" required />
@@ -122,14 +147,8 @@
           </div>
 
           <div style="grid-column:1/-1">
-            <label><input type="checkbox" id="copyMe" /> Send me a copy</label>
-            <input id="myEmail" type="email" placeholder="your.email@cometdev.com" style="margin-top:8px;display:none" />
-            <div class="hint">If checked, a CC will be sent to you as well.</div>
-          </div>
-
-          <div style="grid-column:1/-1">
             <div class="actions">
-              <button type="submit" class="btn btn-primary" id="sendBtn">Send to Accounting</button>
+              <button type="submit" class="btn btn-primary" id="sendBtn">Send</button>
               <button type="button" class="btn btn-ghost" id="downloadBtn">Download JPEG</button>
               <button type="button" class="btn btn-danger" id="clearBtn">Clear</button>
             </div>
@@ -143,13 +162,12 @@
   <!-- EmailJS SDK -->
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
   <script>
-    // ====== YOUR EMAILJS CONFIG (from your dashboard) ======
+    // ====== EMAILJS CONFIG ======
     const EMAILJS_PUBLIC_KEY = "IIVCOWFFago4wLIVZ";
     const EMAILJS_SERVICE_ID = "service_pgc6dhc";
     const EMAILJS_TEMPLATE_ID = "template_vucteoe";
-    // =======================================================
+    // ============================
 
-    // Initialize EmailJS
     emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
 
     const form = document.getElementById('receiptForm');
@@ -160,14 +178,15 @@
     const downloadBtn = document.getElementById('downloadBtn');
     const clearBtn = document.getElementById('clearBtn');
     const sendBtn = document.getElementById('sendBtn');
-    const copyMe = document.getElementById('copyMe');
-    const myEmail = document.getElementById('myEmail');
     const qualitySel = document.getElementById('quality');
+    const sendToSel = document.getElementById('sendTo');
+    const myEmail = document.getElementById('myEmail');
+    const myEmailWrap = document.getElementById('myEmailWrap');
 
     dateEl.valueAsDate = new Date();
 
-    copyMe.addEventListener('change', ()=>{
-      myEmail.style.display = copyMe.checked ? 'block' : 'none';
+    sendToSel.addEventListener('change', ()=>{
+      myEmailWrap.style.display = sendToSel.value === 'me' ? 'block' : 'none';
     });
 
     function showStatus(html, cls){ statusArea.innerHTML = `<div class="${cls||'hint'}">${html}</div>`; }
@@ -175,6 +194,7 @@
 
     let currentCanvas = null;
     let currentBlob = null;
+    let originalFile = null;
 
     function canvasFromImage(file, maxSide=1600, quality=0.82){
       return new Promise((resolve,reject)=>{
@@ -224,19 +244,20 @@
       clearStatus();
       const f = photoEl.files?.[0];
       if(!f) return;
+      originalFile = f;
       showStatus("Processing image…", "hint");
       try{
         if(qualitySel.value === 'original'){
-          const { canvas } = await canvasFromImage(f, 1600, 0.9); // preview only
+          const { canvas } = await canvasFromImage(f, 1600, 0.9); // for preview only
           renderPreview(canvas);
           currentBlob = f; // send original
-          showStatus(`Ready (original selected, preview scaled only)`, "pill");
+          showStatus(`Ready (original selected)`, "tag");
         } else {
           const q = parseFloat(qualitySel.value);
           const { canvas, blob } = await canvasFromImage(f, 1600, isNaN(q)?0.82:q);
           renderPreview(canvas);
           currentBlob = blob;
-          showStatus(`Ready to send (~${(blob.size/1024).toFixed(0)} KB)`, "pill");
+          showStatus(`Ready to send (~${(blob.size/1024).toFixed(0)} KB)`, "tag");
         }
       }catch(e){
         console.error(e);
@@ -247,24 +268,42 @@
     clearBtn.addEventListener('click', ()=>{
       photoEl.value = "";
       preview.innerHTML = '<span class="hint">Preview appears here after you choose a photo.</span>';
-      currentCanvas = null; currentBlob = null; clearStatus();
+      currentCanvas = null; currentBlob = null; originalFile = null; clearStatus();
     });
 
-    downloadBtn.addEventListener('click', ()=>{
-      if(!currentCanvas){ showStatus("No image to download yet.", "error"); return; }
-      currentCanvas.toBlob(b=>{
+    // Robust download: uses canvas if available; otherwise falls back to blob/original file
+    downloadBtn.addEventListener('click', async ()=>{
+      try{
+        if(currentCanvas){
+          currentCanvas.toBlob(b=>{
+            if(!b){ showStatus("Could not create image blob.", "error"); return; }
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(b);
+            a.download = `receipt-${Date.now()}.jpg`;
+            a.click();
+            URL.revokeObjectURL(a.href);
+          }, 'image/jpeg', 0.92);
+          return;
+        }
+        const blob = currentBlob || originalFile;
+        if(!blob){ showStatus("No image to download yet.", "error"); return; }
         const a = document.createElement('a');
-        a.href = URL.createObjectURL(b);
+        a.href = URL.createObjectURL(blob);
         a.download = `receipt-${Date.now()}.jpg`;
         a.click();
         URL.revokeObjectURL(a.href);
-      }, 'image/jpeg', 0.92);
+      }catch(e){
+        console.error(e);
+        showStatus("Download failed.", "error");
+      }
     });
 
     async function handleSubmit(e){
       e.preventDefault();
       clearStatus();
       if(!photoEl.files?.[0]){ showStatus("Please select or take a photo.", "error"); return; }
+      if(sendToSel.value === 'me' && !myEmail.value){ showStatus("Enter your email for test mode.", "error"); return; }
+
       sendBtn.disabled = true;
       showStatus("Sending via EmailJS…", "hint");
 
@@ -289,10 +328,12 @@
         const filenameSafeVendor = vendor || 'vendor';
         const filename = `receipt_${date}_${filenameSafeVendor.replace(/\s+/g,'-')}_${amount.replace(/[^0-9.]/g,'')}.jpg`;
 
-        const cc_email = copyMe.checked && myEmail.value ? myEmail.value.trim() : "";
+        // Decide recipient
+        const to_email = (sendToSel.value === 'me') ? myEmail.value.trim() : 'accts@cometdev.com';
+        const cc_email = (sendToSel.value === 'me') ? '' : ''; // keep empty unless you want CC behavior
 
         const templateParams = {
-          to_email: 'accts@cometdev.com',
+          to_email,
           cc_email,
           subject: `Receipt — ${project} ${building ? '('+building+') ' : ''}— ${vendor} — $${amount} — ${date}`,
           date, name, project, building, vendor, amount, reason, notes,
@@ -302,13 +343,13 @@
         };
 
         await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams);
-        showStatus("✅ Sent to Accounting. You’re good to go!", "success");
+        showStatus("✅ Sent. Check your inbox!", "success");
         form.reset(); dateEl.valueAsDate = new Date();
         preview.innerHTML = '<span class="hint">Preview appears here after you choose a photo.</span>';
-        currentCanvas = null; currentBlob = null;
+        currentCanvas = null; currentBlob = null; originalFile = null;
       }catch(err){
         console.error(err);
-        showStatus("Couldn’t send right now. Check your EmailJS keys / template and try again.", "error");
+        showStatus("Couldn’t send. Recheck EmailJS keys/template and try again.", "error");
       }finally{
         sendBtn.disabled = false;
       }
