@@ -61,12 +61,12 @@
         <span class="badge">New</span>
         <div>
           <div style="font-weight:700">Send a Receipt</div>
-          <div class="hint">Snaps/Uploads, optional compression. Sends via EmailJS with photo attached.</div>
+          <div class="hint">Snaps/Uploads, adaptive compression (EmailJS 50KB limit). Photo is attached to the email.</div>
         </div>
       </div>
 
       <form id="receiptForm" class="grid" autocomplete="on">
-        <!-- Left column -->
+        <!-- LEFT COLUMN -->
         <div class="row">
           <div style="display:flex;gap:12px;align-items:center">
             <label for="sendTo" style="margin:0">Send To</label>
@@ -76,7 +76,6 @@
             </select>
           </div>
 
-          <!-- Always visible AND editable -->
           <div id="testEmailWrap">
             <label for="testEmail">Your Email (for Me/test)</label>
             <input id="testEmail" type="email" placeholder="you@cometdev.com" />
@@ -87,18 +86,60 @@
             <label for="date">Date</label>
             <input id="date" name="date" type="date" required />
           </div>
+
+          <!-- Name dropdown -->
           <div>
             <label for="name">Your Name</label>
-            <input id="name" name="name" type="text" placeholder="First Last" required />
+            <select id="name" name="name" required>
+              <option value="" disabled selected>Select your name</option>
+              <option>David Gonzalez</option>
+              <option>Jason Moran</option>
+              <option>Seth Coker</option>
+              <option>Trefyn Carter</option>
+              <option>Ramiro Tristian Zavala</option>
+              <option>Rolando Garcia</option>
+              <option>Douglas Wheeler</option>
+              <option>Nathan Isner</option>
+            </select>
           </div>
+
+          <!-- Project dropdown -->
           <div>
             <label for="project">Project</label>
-            <input id="project" name="project" type="text" placeholder="Comet Sneads Ferry / Pittsboro / …" required />
+            <select id="project" name="project" required>
+              <option value="" disabled selected>Select a project</option>
+              <option>Comet Pittsboro</option>
+              <option>Comet Richlands</option>
+              <option>Comet North Raleigh</option>
+              <option>Comet Lake Jeanette</option>
+            </select>
           </div>
+
+          <!-- Building dropdown -->
           <div>
             <label for="building">Building #</label>
-            <input id="building" name="building" type="text" placeholder="e.g., B01, B04, Clubhouse" required />
+            <select id="building" name="building" required>
+              <option value="" disabled selected>Select a building/area</option>
+              <optgroup label="Buildings B">
+                <option>B01</option><option>B02</option><option>B03</option><option>B04</option>
+                <option>B05</option><option>B06</option><option>B07</option><option>B08</option>
+              </optgroup>
+              <optgroup label="Buildings C">
+                <option>C01</option>
+              </optgroup>
+              <optgroup label="Buildings G">
+                <option>G01</option><option>G02</option><option>G03</option><option>G04</option><option>G05</option>
+                <option>G06</option><option>G07</option><option>G08</option><option>G09</option><option>G10</option>
+              </optgroup>
+              <optgroup label="Site Features">
+                <option>Sign Monument</option>
+                <option>Compactor</option>
+                <option>Pool</option>
+                <option>Pickleball Court</option>
+              </optgroup>
+            </select>
           </div>
+
           <div>
             <label for="vendor">Vendor</label>
             <input id="vendor" name="vendor" type="text" placeholder="Home Depot, CPS, Lowe’s…" required />
@@ -117,7 +158,7 @@
           </div>
         </div>
 
-        <!-- Right column -->
+        <!-- RIGHT COLUMN -->
         <div class="row">
           <div>
             <label for="photo">Receipt Photo</label>
@@ -131,9 +172,9 @@
               <option value="0.82">Default (balanced)</option>
               <option value="0.94">High quality (larger file)</option>
               <option value="0.6">Smaller file</option>
-              <option value="original">No compression (send original)</option>
+              <option value="original">No compression (try to keep quality)</option>
             </select>
-            <div class="hint">We limit max side to 1600px by default.</div>
+            <div class="hint">We’ll auto-fit under EmailJS’s ~50KB variable limit.</div>
           </div>
 
           <div style="grid-column:1/-1">
@@ -221,11 +262,35 @@
         const fr = new FileReader();
         fr.onload = ()=> {
           const dataUrl = fr.result;
-          resolve(String(dataUrl).split(',')[1]);
+          resolve(String(dataUrl).split(',')[1]); // base64 only
         };
         fr.onerror = reject;
         fr.readAsDataURL(blob);
       });
+    }
+
+    // Adaptive compression to fit under EmailJS ~50KB variable cap
+    async function compressToLimit(fileOrBlob, opts = {}){
+      const LIMIT = opts.limitBytes ?? 48000;       // aim below 50KB
+      let maxSide = opts.startMaxSide ?? 1200;
+      let quality = opts.startQuality ?? 0.78;
+      const minSide = 600;
+      const minQuality = 0.5;
+      let candidate = fileOrBlob;
+
+      for(let i=0;i<10;i++){
+        const { blob } = await canvasFromImage(candidate, maxSide, quality);
+        if (blob.size <= LIMIT) return { blob, maxSide, quality };
+        if (quality > minQuality) {
+          quality = Math.max(minQuality, quality - 0.08);
+        } else if (maxSide > minSide) {
+          maxSide = Math.max(minSide, Math.round(maxSide * 0.85));
+        } else {
+          return { blob, maxSide, quality, overLimit: true };
+        }
+        candidate = blob;
+      }
+      return { blob: candidate, maxSide, quality, overLimit: true };
     }
 
     photoEl.addEventListener('change', async ()=>{
@@ -235,19 +300,13 @@
       originalFile = f;
       showStatus("Processing image…", "hint");
       try{
-        if(qualitySel.value === 'original'){
-          // Use a scaled preview, but send the original file
-          const { canvas } = await canvasFromImage(f, 1600, 0.9);
-          renderPreview(canvas);
-          currentBlob = f;
-          showStatus(`Ready (original selected)`, "tag");
-        } else {
-          const q = parseFloat(qualitySel.value);
-          const { canvas, blob } = await canvasFromImage(f, 1600, isNaN(q)?0.82:q);
-          renderPreview(canvas);
-          currentBlob = blob;
-          showStatus(`Ready to send (~${(blob.size/1024).toFixed(0)} KB)`, "tag");
-        }
+        // Always show a preview (scaled); we’ll compress separately for sending
+        const { canvas } = await canvasFromImage(f, 900, 0.82);
+        renderPreview(canvas);
+        // Precompute a decent default blob for Download button
+        const { blob } = await canvasFromImage(f, 1200, 0.82);
+        currentBlob = blob;
+        showStatus(`Preview ready.`, "tag");
       }catch(e){
         console.error(e);
         showStatus("Could not process image.", "error");
@@ -296,7 +355,7 @@
       if(isMe && !testEmail.value){ showStatus("Enter your email for test mode.", "error"); testEmail.focus(); return; }
 
       sendBtn.disabled = true;
-      showStatus("Sending via EmailJS…", "hint");
+      showStatus("Optimizing image…", "hint");
 
       try{
         const date = dateEl.value || new Date().toISOString().slice(0,10);
@@ -308,19 +367,28 @@
         const reason = document.getElementById('reason').value.trim();
         const notes = document.getElementById('notes').value.trim();
 
-        let blobToSend = currentBlob;
-        if(!blobToSend){
-          const q = qualitySel.value === 'original' ? 0.92 : parseFloat(qualitySel.value||'0.82');
-          const { blob } = await canvasFromImage(photoEl.files[0], 1600, q);
-          blobToSend = (qualitySel.value === 'original') ? photoEl.files[0] : blob;
-        }
+        // Initial compression preferences (user choice influences starting point)
+        let startQuality = 0.82, startMaxSide = 1200;
+        if (qualitySel.value === '0.94') { startQuality = 0.9; startMaxSide = 1400; }
+        if (qualitySel.value === '0.6')  { startQuality = 0.7; startMaxSide = 1000; }
+        if (qualitySel.value === 'original') { startQuality = 0.85; startMaxSide = 1400; }
 
-        const base64 = await blobToBase64(blobToSend);
+        // Compress to fit EmailJS 50KB variable limit
+        const { blob: sendBlob, maxSide, quality, overLimit } =
+          await compressToLimit(photoEl.files[0], { startQuality, startMaxSide, limitBytes: 48000 });
+
+        const base64 = await blobToBase64(sendBlob);
         const filenameSafeVendor = vendor || 'vendor';
         const filename = `receipt_${date}_${filenameSafeVendor.replace(/\s+/g,'-')}_${amount.replace(/[^0-9.]/g,'')}.jpg`;
 
+        if (overLimit) {
+          showStatus(`Heads up: image minimized to ~${(sendBlob.size/1024).toFixed(0)} KB (max side ${maxSide}px @ q=${quality}).`, "hint");
+        } else {
+          showStatus(`Image optimized: ~${(sendBlob.size/1024).toFixed(0)} KB (max side ${maxSide}px @ q=${quality}). Sending…`, "hint");
+        }
+
         const to_email = isMe ? testEmail.value.trim() : 'accts@cometdev.com';
-        const cc_email = ''; // set to your address if you want a copy every time
+        const cc_email = ''; // add your address if you always want a copy
 
         const templateParams = {
           to_email,
