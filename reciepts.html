@@ -22,7 +22,6 @@
     header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
     header a{color:#e5e7eb;text-decoration:none;opacity:.85}
     header a:hover{opacity:1;text-decoration:underline}
-    h1{font-size:24px;margin:0}
     .card{background:var(--card);border:1px solid #1f2937;border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.35);overflow:hidden}
     .card-head{padding:16px 18px;border-bottom:1px solid #1f2937;display:flex;gap:12px;align-items:center}
     .badge{font-size:12px;background:#0ea5e9;color:#001018;padding:4px 8px;border-radius:999px}
@@ -144,11 +143,11 @@
   <!-- EmailJS SDK -->
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
   <script>
-    // ====== CONFIGURE THESE 3 VALUES ======
-    const EMAILJS_PUBLIC_KEY = "YOUR_EMAILJS_PUBLIC_KEY";
-    const EMAILJS_SERVICE_ID = "YOUR_SERVICE_ID";
-    const EMAILJS_TEMPLATE_ID = "YOUR_TEMPLATE_ID";
-    // ======================================
+    // ====== YOUR EMAILJS CONFIG (from your dashboard) ======
+    const EMAILJS_PUBLIC_KEY = "IIVCOWFFago4wLIVZ";
+    const EMAILJS_SERVICE_ID = "service_pgc6dhc";
+    const EMAILJS_TEMPLATE_ID = "template_vucteoe";
+    // =======================================================
 
     // Initialize EmailJS
     emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
@@ -228,10 +227,9 @@
       showStatus("Processing image…", "hint");
       try{
         if(qualitySel.value === 'original'){
-          // show preview from original (scaled in canvas only for preview)
-          const { canvas, blob } = await canvasFromImage(f, 1600, 0.9); // preview only
+          const { canvas } = await canvasFromImage(f, 1600, 0.9); // preview only
           renderPreview(canvas);
-          currentBlob = f; // keep original file as the one to send
+          currentBlob = f; // send original
           showStatus(`Ready (original selected, preview scaled only)`, "pill");
         } else {
           const q = parseFloat(qualitySel.value);
@@ -271,7 +269,6 @@
       showStatus("Sending via EmailJS…", "hint");
 
       try{
-        // Build payload
         const date = dateEl.value || new Date().toISOString().slice(0,10);
         const name = document.getElementById('name').value.trim();
         const project = document.getElementById('project').value.trim();
@@ -281,35 +278,26 @@
         const reason = document.getElementById('reason').value.trim();
         const notes = document.getElementById('notes').value.trim();
 
-        // Choose blob (compressed or original)
         let blobToSend = currentBlob;
         if(!blobToSend){
-          // Safety net: if user never opened preview (e.g., older browsers), compress now
           const q = qualitySel.value === 'original' ? 0.92 : parseFloat(qualitySel.value||'0.82');
           const { blob } = await canvasFromImage(photoEl.files[0], 1600, q);
           blobToSend = (qualitySel.value === 'original') ? photoEl.files[0] : blob;
         }
 
-        // Convert to base64 for EmailJS attachment
         const base64 = await blobToBase64(blobToSend);
         const filenameSafeVendor = vendor || 'vendor';
         const filename = `receipt_${date}_${filenameSafeVendor.replace(/\s+/g,'-')}_${amount.replace(/[^0-9.]/g,'')}.jpg`;
 
         const cc_email = copyMe.checked && myEmail.value ? myEmail.value.trim() : "";
 
-        // EmailJS template params
         const templateParams = {
           to_email: 'accts@cometdev.com',
           cc_email,
           subject: `Receipt — ${project} ${building ? '('+building+') ' : ''}— ${vendor} — $${amount} — ${date}`,
           date, name, project, building, vendor, amount, reason, notes,
-          // Attachment object(s)
           attachments: [
-            {
-              name: filename,
-              data: base64,
-              contentType: 'image/jpeg'
-            }
+            { name: filename, data: base64, contentType: 'image/jpeg' }
           ]
         };
 
@@ -330,3 +318,4 @@
   </script>
 </body>
 </html>
+
