@@ -5,11 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Field Reporting Hub — Receipts</title>
   <meta name="description" content="Snap & send company receipts to accounting via EmailJS." />
+  <!-- CSP: allow inline scripts so our JS runs -->
   <meta http-equiv="Content-Security-Policy" content="
     default-src 'self';
     img-src 'self' data: blob:;
     style-src 'self' 'unsafe-inline';
-    script-src 'self' https://cdn.jsdelivr.net https://www.gstatic.com;
+    script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://www.gstatic.com;
     connect-src https://api.emailjs.com;
   ">
   <style>
@@ -46,8 +47,6 @@
     .tag{display:inline-flex;gap:6px;align-items:center;color:#0f172a;background:#eef2ff;border:1px solid #c7d2fe;padding:6px 10px;border-radius:999px;font-size:12px}
     .success{border-left:4px solid var(--accent);background:#ecfdf5;padding:10px 12px;border-radius:8px;color:#064e3b}
     .error{border-left:4px solid var(--red);background:#fff1f2;padding:10px 12px;border-radius:8px;color:#9f1239}
-    .inline{display:flex;gap:10px;align-items:center}
-    .disabled-wrap{opacity:.6}
   </style>
 </head>
 <body>
@@ -69,7 +68,7 @@
       <form id="receiptForm" class="grid" autocomplete="on">
         <!-- Left column -->
         <div class="row">
-          <div class="inline" style="gap:12px">
+          <div style="display:flex;gap:12px;align-items:center">
             <label for="sendTo" style="margin:0">Send To</label>
             <select id="sendTo" name="sendTo" style="max-width:260px">
               <option value="accounting" selected>Accounting (accts@cometdev.com)</option>
@@ -77,11 +76,11 @@
             </select>
           </div>
 
-          <!-- Always visible; disabled unless 'Me (test)' -->
+          <!-- Always visible AND editable -->
           <div id="testEmailWrap">
             <label for="testEmail">Your Email (for Me/test)</label>
-            <input id="testEmail" type="email" placeholder="you@cometdev.com" disabled />
-            <div class="hint">Enabled when “Me (test)” is selected.</div>
+            <input id="testEmail" type="email" placeholder="you@cometdev.com" />
+            <div class="hint">Used only when “Me (test)” is selected.</div>
           </div>
 
           <div>
@@ -175,25 +174,11 @@
     const qualitySel = document.getElementById('quality');
     const sendToSel = document.getElementById('sendTo');
     const testEmail = document.getElementById('testEmail');
-    const testEmailWrap = document.getElementById('testEmailWrap');
 
     dateEl.valueAsDate = new Date();
 
     function showStatus(html, cls){ statusArea.innerHTML = `<div class="${cls||'hint'}">${html}</div>`; }
     function clearStatus(){ statusArea.innerHTML = ""; }
-
-    // Enable/disable the test email field
-    function syncSendTo(){
-      const isMe = sendToSel.value === 'me';
-      testEmail.disabled = !isMe;
-      testEmailWrap.classList.toggle('disabled-wrap', !isMe);
-      if(isMe && !testEmail.value){
-        testEmail.value = 'dgonzalez@cometdev.com'; // prefill for speed
-      }
-      if(isMe) testEmail.focus();
-    }
-    sendToSel.addEventListener('change', syncSendTo);
-    syncSendTo(); // initialize on load
 
     let currentCanvas = null;
     let currentBlob = null;
@@ -236,7 +221,7 @@
         const fr = new FileReader();
         fr.onload = ()=> {
           const dataUrl = fr.result;
-          resolve(String(dataUrl).split(',')[1]); // base64 only
+          resolve(String(dataUrl).split(',')[1]);
         };
         fr.onerror = reject;
         fr.readAsDataURL(blob);
@@ -251,9 +236,10 @@
       showStatus("Processing image…", "hint");
       try{
         if(qualitySel.value === 'original'){
-          const { canvas } = await canvasFromImage(f, 1600, 0.9); // preview only
+          // Use a scaled preview, but send the original file
+          const { canvas } = await canvasFromImage(f, 1600, 0.9);
           renderPreview(canvas);
-          currentBlob = f; // send original
+          currentBlob = f;
           showStatus(`Ready (original selected)`, "tag");
         } else {
           const q = parseFloat(qualitySel.value);
@@ -344,12 +330,11 @@
           attachments: [{ name: filename, data: base64, contentType: 'image/jpeg' }]
         };
 
-        const res = await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams);
+        await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams);
         showStatus("✅ Sent. Check your inbox!", "success");
         form.reset(); dateEl.valueAsDate = new Date();
         preview.innerHTML = '<span class="hint">Preview appears here after you choose a photo.</span>';
         currentCanvas = null; currentBlob = null; originalFile = null;
-        syncSendTo(); // reset disabled state
       }catch(err){
         console.error(err);
         showStatus(`Couldn’t send. ${err?.text || err?.message || 'Check EmailJS logs for details.'}`, "error");
@@ -362,5 +347,3 @@
   </script>
 </body>
 </html>
-
-
