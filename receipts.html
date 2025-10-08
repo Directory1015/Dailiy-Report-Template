@@ -61,7 +61,7 @@
         <span class="badge">New</span>
         <div>
           <div style="font-weight:700">Send a Receipt</div>
-          <div class="hint">Snaps/Uploads, adaptive compression (EmailJS 50KB limit). Photo is attached to the email.</div>
+          <div class="hint">Snaps/Uploads, adaptive compression (EmailJS ~50KB variable limit). Photo is attached to the email.</div>
         </div>
       </div>
 
@@ -174,7 +174,7 @@
               <option value="0.6">Smaller file</option>
               <option value="original">No compression (try to keep quality)</option>
             </select>
-            <div class="hint">We’ll auto-fit under EmailJS’s ~50KB variable limit.</div>
+            <div class="hint">We auto-fit under EmailJS’s ~50KB variable limit.</div>
           </div>
 
           <div style="grid-column:1/-1">
@@ -269,9 +269,9 @@
       });
     }
 
-    // Adaptive compression to fit under EmailJS ~50KB variable cap
+    // Adaptive compression to fit under EmailJS variable cap
     async function compressToLimit(fileOrBlob, opts = {}){
-      const LIMIT = opts.limitBytes ?? 48000;       // aim below 50KB
+      const LIMIT = opts.limitBytes ?? 34000;       // CHANGED: target ≤ 34KB binary
       let maxSide = opts.startMaxSide ?? 1200;
       let quality = opts.startQuality ?? 0.78;
       const minSide = 600;
@@ -346,6 +346,12 @@
       }
     });
 
+    // Show test email field only when needed (nice-to-have)
+    sendToSel.addEventListener('change', ()=>{
+      document.getElementById('testEmailWrap').style.display =
+        sendToSel.value === 'me' ? 'block' : 'block'; // keep visible but message clarifies usage
+    });
+
     async function handleSubmit(e){
       e.preventDefault();
       clearStatus();
@@ -373,29 +379,37 @@
         if (qualitySel.value === '0.6')  { startQuality = 0.7; startMaxSide = 1000; }
         if (qualitySel.value === 'original') { startQuality = 0.85; startMaxSide = 1400; }
 
-        // Compress to fit EmailJS 50KB variable limit
+        // Compress to fit EmailJS payload limit
         const { blob: sendBlob, maxSide, quality, overLimit } =
-          await compressToLimit(photoEl.files[0], { startQuality, startMaxSide, limitBytes: 48000 });
+          await compressToLimit(photoEl.files[0], { startQuality, startMaxSide, limitBytes: 34000 }); // CHANGED
 
         const base64 = await blobToBase64(sendBlob);
+
+        // CHANGED: include data URL prefix for EmailJS attachment
+        const attachmentDataUrl = `data:image/jpeg;base64,${base64}`;
+
         const filenameSafeVendor = vendor || 'vendor';
         const filename = `receipt_${date}_${filenameSafeVendor.replace(/\s+/g,'-')}_${amount.replace(/[^0-9.]/g,'')}.jpg`;
 
+        // Show both binary size and estimated base64 size for transparency
+        const b64Size = Math.ceil((sendBlob.size * 4) / 3); // rough estimate
+        const kb = (n)=> (n/1024).toFixed(0);
         if (overLimit) {
-          showStatus(`Heads up: image minimized to ~${(sendBlob.size/1024).toFixed(0)} KB (max side ${maxSide}px @ q=${quality}).`, "hint");
+          showStatus(`Heads up: minimized to ~${kb(sendBlob.size)} KB (≈${kb(b64Size)} KB base64). Max side ${maxSide}px @ q=${quality}.`, "hint");
         } else {
-          showStatus(`Image optimized: ~${(sendBlob.size/1024).toFixed(0)} KB (max side ${maxSide}px @ q=${quality}). Sending…`, "hint");
+          showStatus(`Image optimized: ~${kb(sendBlob.size)} KB (≈${kb(b64Size)} KB base64). Sending…`, "hint");
         }
 
         const to_email = isMe ? testEmail.value.trim() : 'accts@cometdev.com';
-        const cc_email = ''; // add your address if you always want a copy
+        const cc_email = '';
 
         const templateParams = {
           to_email,
           cc_email,
           subject: `Receipt — ${project} ${building ? '('+building+') ' : ''}— ${vendor} — $${amount} — ${date}`,
           date, name, project, building, vendor, amount, reason, notes,
-          attachments: [{ name: filename, data: base64, contentType: 'image/jpeg' }]
+          // CHANGED: pass as EmailJS attachment (data URL)
+          attachments: [{ name: filename, data: attachmentDataUrl, contentType: 'image/jpeg' }]
         };
 
         await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams);
