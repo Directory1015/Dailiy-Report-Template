@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Field Reporting Hub — Receipts</title>
+  <meta name="description" content="Snap & send company receipts to accounting via EmailJS." />
+  <meta http-equiv="Content-Security-Policy" content="
+    default-src 'self';
+    img-src 'self' data: blob:;
+    style-src 'self' 'unsafe-inline';
+    script-src 'self' https://cdn.jsdelivr.net https://www.gstatic.com;
+    connect-src https://api.emailjs.com;
+  ">
+  <style>
+    :root{
+      --ink:#0b1220; --bg:#0f172a; --card:#141c2f; --muted:#94a3b8; --accent:#27c27d; --red:#e11d48; --ring:rgba(39,194,125,.45);
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0;background:linear-gradient(180deg,#0a1022,#0b1220);color:#e5e7eb;font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+    .wrap{max-width:860px;margin:0 auto;padding:24px}
+    header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+    header a{color:#e5e7eb;text-decoration:none;opacity:.85}
+    header a:hover{opacity:1;text-decoration:underline}
+    h1{font-size:24px;margin:0}
+    .card{background:var(--card);border:1px solid #1f2937;border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.35);overflow:hidden}
+    .card-head{padding:16px 18px;border-bottom:1px solid #1f2937;display:flex;gap:12px;align-items:center}
+    .badge{font-size:12px;background:#0ea5e9;color:#001018;padding:4px 8px;border-radius:999px}
+    .grid{display:grid;gap:16px;padding:18px}
+    @media(min-width:760px){.grid{grid-template-columns:1fr 1fr}}
+    label{display:block;font-size:14px;color:#cbd5e1;margin-bottom:6px}
+    input,select,textarea,button{width:100%;padding:10px 12px;border-radius:10px;border:1px solid #24354a;background:#0c1324;color:#e5e7eb;outline:none}
+    input:focus,select:focus,textarea:focus{box-shadow:0 0 0 3px var(--ring);border-color:#2a9c6f}
+    textarea{resize:vertical;min-height:82px}
+    .row{display:grid;gap:14px}
+    .actions{display:flex;flex-wrap:wrap;gap:12px}
+    .btn{cursor:pointer;border:none}
+    .btn-primary{background:linear-gradient(180deg,#2dd4bf,#10b981);color:#051311;font-weight:600}
+    .btn-ghost{background:#0c1324;border:1px solid #223148}
+    .btn-danger{background:linear-gradient(180deg,#fb7185,#e11d48);font-weight:600}
+    .hint{font-size:12px;color:var(--muted)}
+    .preview{display:flex;align-items:center;justify-content:center;background:#0a1220;border:1px dashed #334155;border-radius:12px;min-height:260px;position:relative;overflow:hidden}
+    .preview canvas{max-width:100%;height:auto;display:block}
+    .pill{display:inline-flex;gap:8px;align-items:center;background:#0c1324;border:1px solid #223148;color:#cbd5e1;padding:6px 10px;border-radius:999px;font-size:12px}
+    .success{border-left:4px solid var(--accent);background:#0f2a20;padding:10px 12px;border-radius:8px;color:#d1fae5}
+    .error{border-left:4px solid var(--red);background:#2a0f16;padding:10px 12px;border-radius:8px;color:#ffe4e6}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <a href="./">← Back to Hub</a>
+      <span class="pill">Receipts Uploader (EmailJS)</span>
+    </header>
+
+    <div class="card">
+      <div class="card-head">
+        <span class="badge">New</span>
+        <div>
+          <div style="font-weight:700">Send a Receipt to Accounting</div>
+          <div class="hint">Snaps/Uploads, optional compression, emails to <strong>accts@cometdev.com</strong>.</div>
+        </div>
+      </div>
+
+      <form id="receiptForm" class="grid" autocomplete="on">
+        <!-- Left column -->
+        <div class="row">
+          <div>
+            <label for="date">Date</label>
+            <input id="date" name="date" type="date" required />
+          </div>
+          <div>
+            <label for="name">Your Name</label>
+            <input id="name" name="name" type="text" placeholder="First Last" required />
+          </div>
+          <div>
+            <label for="project">Project</label>
+            <input id="project" name="project" type="text" placeholder="Comet Sneads Ferry / Pittsboro / …" required />
+          </div>
+          <div>
+            <label for="building">Building #</label>
+            <input id="building" name="building" type="text" placeholder="e.g., B01, B04, Clubhouse" required />
+          </div>
+          <div>
+            <label for="vendor">Vendor</label>
+            <input id="vendor" name="vendor" type="text" placeholder="Home Depot, CPS, Lowe’s…" required />
+          </div>
+          <div>
+            <label for="amount">Amount (USD)</label>
+            <input id="amount" name="amount" type="number" step="0.01" min="0" placeholder="0.00" required />
+          </div>
+          <div style="grid-column:1/-1">
+            <label for="reason">Reason (optional)</label>
+            <input id="reason" name="reason" type="text" placeholder="Brief purpose (e.g., 2” PVC fittings for B04 trench)" />
+          </div>
+          <div style="grid-column:1/-1">
+            <label for="notes">Notes (optional)</label>
+            <textarea id="notes" name="notes" placeholder="Extra context if needed"></textarea>
+          </div>
+        </div>
+
+        <!-- Right column -->
+        <div class="row">
+          <div>
+            <label for="photo">Receipt Photo</label>
+            <input id="photo" name="photo" type="file" accept="image/*" capture="environment" required />
+            <div class="hint">Tip: On mobile this opens the camera.</div>
+          </div>
+
+          <div>
+            <label for="quality">Compression</label>
+            <select id="quality" name="quality">
+              <option value="0.82">Default (balanced)</option>
+              <option value="0.94">High quality (larger file)</option>
+              <option value="0.6">Smaller file</option>
+              <option value="original">No compression (send original)</option>
+            </select>
+            <div class="hint">We limit max side to 1600px by default.</div>
+          </div>
+
+          <div style="grid-column:1/-1">
+            <div class="preview" id="preview"><span class="hint">Preview appears here after you choose a photo.</span></div>
+          </div>
+
+          <div style="grid-column:1/-1">
+            <label><input type="checkbox" id="copyMe" /> Send me a copy</label>
+            <input id="myEmail" type="email" placeholder="your.email@cometdev.com" style="margin-top:8px;display:none" />
+            <div class="hint">If checked, a CC will be sent to you as well.</div>
+          </div>
+
+          <div style="grid-column:1/-1">
+            <div class="actions">
+              <button type="submit" class="btn btn-primary" id="sendBtn">Send to Accounting</button>
+              <button type="button" class="btn btn-ghost" id="downloadBtn">Download JPEG</button>
+              <button type="button" class="btn btn-danger" id="clearBtn">Clear</button>
+            </div>
+            <div id="statusArea"></div>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- EmailJS SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+  <script>
+    // ====== CONFIGURE THESE 3 VALUES ======
+    const EMAILJS_PUBLIC_KEY = "YOUR_EMAILJS_PUBLIC_KEY";
+    const EMAILJS_SERVICE_ID = "YOUR_SERVICE_ID";
+    const EMAILJS_TEMPLATE_ID = "YOUR_TEMPLATE_ID";
+    // ======================================
+
+    // Initialize EmailJS
+    emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
+
+    const form = document.getElementById('receiptForm');
+    const dateEl = document.getElementById('date');
+    const photoEl = document.getElementById('photo');
+    const preview = document.getElementById('preview');
+    const statusArea = document.getElementById('statusArea');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const sendBtn = document.getElementById('sendBtn');
+    const copyMe = document.getElementById('copyMe');
+    const myEmail = document.getElementById('myEmail');
+    const qualitySel = document.getElementById('quality');
+
+    dateEl.valueAsDate = new Date();
+
+    copyMe.addEventListener('change', ()=>{
+      myEmail.style.display = copyMe.checked ? 'block' : 'none';
+    });
+
+    function showStatus(html, cls){ statusArea.innerHTML = `<div class="${cls||'hint'}">${html}</div>`; }
+    function clearStatus(){ statusArea.innerHTML = ""; }
+
+    let currentCanvas = null;
+    let currentBlob = null;
+
+    function canvasFromImage(file, maxSide=1600, quality=0.82){
+      return new Promise((resolve,reject)=>{
+        if(!file) return reject(new Error("No file"));
+        const img = new Image();
+        img.onload = () => {
+          const { width, height } = img;
+          const scale = Math.min(1, maxSide / Math.max(width, height));
+          const w = Math.round(width * scale);
+          const h = Math.round(height * scale);
+          const can = document.createElement('canvas');
+          can.width = w; can.height = h;
+          const ctx = can.getContext('2d');
+          ctx.drawImage(img, 0, 0, w, h);
+          can.toBlob(b=>{
+            if(!b) return reject(new Error("Blob failed"));
+            resolve({ canvas: can, blob: b });
+          }, 'image/jpeg', quality);
+        };
+        img.onerror = reject;
+        const fr = new FileReader();
+        fr.onload = ()=> img.src = fr.result;
+        fr.onerror = reject;
+        fr.readAsDataURL(file);
+      });
+    }
+
+    function renderPreview(canvas){
+      preview.innerHTML = "";
+      preview.appendChild(canvas);
+      currentCanvas = canvas;
+    }
+
+    function blobToBase64(blob){
+      return new Promise((resolve,reject)=>{
+        const fr = new FileReader();
+        fr.onload = ()=> {
+          const dataUrl = fr.result; // data:image/jpeg;base64,XXXX
+          resolve(String(dataUrl).split(',')[1]); // base64 only
+        };
+        fr.onerror = reject;
+        fr.readAsDataURL(blob);
+      });
+    }
+
+    photoEl.addEventListener('change', async ()=>{
+      clearStatus();
+      const f = photoEl.files?.[0];
+      if(!f) return;
+      showStatus("Processing image…", "hint");
+      try{
+        if(qualitySel.value === 'original'){
+          // show preview from original (scaled in canvas only for preview)
+          const { canvas, blob } = await canvasFromImage(f, 1600, 0.9); // preview only
+          renderPreview(canvas);
+          currentBlob = f; // keep original file as the one to send
+          showStatus(`Ready (original selected, preview scaled only)`, "pill");
+        } else {
+          const q = parseFloat(qualitySel.value);
+          const { canvas, blob } = await canvasFromImage(f, 1600, isNaN(q)?0.82:q);
+          renderPreview(canvas);
+          currentBlob = blob;
+          showStatus(`Ready to send (~${(blob.size/1024).toFixed(0)} KB)`, "pill");
+        }
+      }catch(e){
+        console.error(e);
+        showStatus("Could not process image.", "error");
+      }
+    });
+
+    clearBtn.addEventListener('click', ()=>{
+      photoEl.value = "";
+      preview.innerHTML = '<span class="hint">Preview appears here after you choose a photo.</span>';
+      currentCanvas = null; currentBlob = null; clearStatus();
+    });
+
+    downloadBtn.addEventListener('click', ()=>{
+      if(!currentCanvas){ showStatus("No image to download yet.", "error"); return; }
+      currentCanvas.toBlob(b=>{
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(b);
+        a.download = `receipt-${Date.now()}.jpg`;
+        a.click();
+        URL.revokeObjectURL(a.href);
+      }, 'image/jpeg', 0.92);
+    });
+
+    async function handleSubmit(e){
+      e.preventDefault();
+      clearStatus();
+      if(!photoEl.files?.[0]){ showStatus("Please select or take a photo.", "error"); return; }
+      sendBtn.disabled = true;
+      showStatus("Sending via EmailJS…", "hint");
+
+      try{
+        // Build payload
+        const date = dateEl.value || new Date().toISOString().slice(0,10);
+        const name = document.getElementById('name').value.trim();
+        const project = document.getElementById('project').value.trim();
+        const building = document.getElementById('building').value.trim();
+        const vendor = document.getElementById('vendor').value.trim();
+        const amount = document.getElementById('amount').value.trim();
+        const reason = document.getElementById('reason').value.trim();
+        const notes = document.getElementById('notes').value.trim();
+
+        // Choose blob (compressed or original)
+        let blobToSend = currentBlob;
+        if(!blobToSend){
+          // Safety net: if user never opened preview (e.g., older browsers), compress now
+          const q = qualitySel.value === 'original' ? 0.92 : parseFloat(qualitySel.value||'0.82');
+          const { blob } = await canvasFromImage(photoEl.files[0], 1600, q);
+          blobToSend = (qualitySel.value === 'original') ? photoEl.files[0] : blob;
+        }
+
+        // Convert to base64 for EmailJS attachment
+        const base64 = await blobToBase64(blobToSend);
+        const filenameSafeVendor = vendor || 'vendor';
+        const filename = `receipt_${date}_${filenameSafeVendor.replace(/\s+/g,'-')}_${amount.replace(/[^0-9.]/g,'')}.jpg`;
+
+        const cc_email = copyMe.checked && myEmail.value ? myEmail.value.trim() : "";
+
+        // EmailJS template params
+        const templateParams = {
+          to_email: 'accts@cometdev.com',
+          cc_email,
+          subject: `Receipt — ${project} ${building ? '('+building+') ' : ''}— ${vendor} — $${amount} — ${date}`,
+          date, name, project, building, vendor, amount, reason, notes,
+          // Attachment object(s)
+          attachments: [
+            {
+              name: filename,
+              data: base64,
+              contentType: 'image/jpeg'
+            }
+          ]
+        };
+
+        await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams);
+        showStatus("✅ Sent to Accounting. You’re good to go!", "success");
+        form.reset(); dateEl.valueAsDate = new Date();
+        preview.innerHTML = '<span class="hint">Preview appears here after you choose a photo.</span>';
+        currentCanvas = null; currentBlob = null;
+      }catch(err){
+        console.error(err);
+        showStatus("Couldn’t send right now. Check your EmailJS keys / template and try again.", "error");
+      }finally{
+        sendBtn.disabled = false;
+      }
+    }
+
+    form.addEventListener('submit', handleSubmit);
+  </script>
+</body>
+</html>
