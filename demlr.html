@@ -224,6 +224,9 @@
             <tr><td>G</td><td>Are earthen stockpiles stabilized or otherwise protected, and located at least 50 ft away or downhill from drain inlets and surface waters?</td><td class="ynna-cell"><input type="radio" name="p2b_4" value="Y"></td><td class="ynna-cell"><input type="radio" name="p2b_4" value="N"></td><td class="ynna-cell"><input type="radio" name="p2b_4" value="NA"></td></tr>
           </tbody>
         </table>
+        <div class="small info" style="margin-top:8px">
+          Report oil spills and releases of hazardous substances to the appropriate DEQ Regional Office within 24 hours of discovery.
+        </div>
 
         <!-- 2C -->
         <h3 class="small" style="margin-top:12px">Part 2C: Non-Storm Water Pollutant Controls</h3>
@@ -239,7 +242,7 @@
           </tbody>
         </table>
         <div class="small info" style="margin-top:8px">
-          Report oil spills and releases of hazardous substances to the appropriate DEQ Regional Office within 24 hours of discovery.
+          Report visible sedimentation into streams or wetlands to the appropriate DEQ Regional Office within 24 hours of discovery.
         </div>
 
         <!-- 2D -->
@@ -749,6 +752,14 @@
         '<input placeholder="I/A/R/X"/>'
       ]);
     }
+
+    // Wipe all drafts (added since there is a button)
+    $('#wipeAll')?.addEventListener('click', function(){
+      if(confirm('Delete all saved drafts in this browser?')){
+        localStorage.removeItem(STORAGE_KEY);
+        renderHistory();
+      }
+    });
 
     document.addEventListener('DOMContentLoaded', function(){
       if($('#inspection_dt') && !$('#inspection_dt').value){
