@@ -1,152 +1,155 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Comet — Site Reports Hub</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
-  <style>
-    :root{
-      --white:#ffffff;
-      --blue:#2563eb;
-      --blue-light:#3b82f6;
-      --gray:#6b7280;
-      --border:#e5e7eb;
-      --shadow:rgba(0,0,0,.08);
-      --bg:#f8fafc;
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+<title>Comet Builders LLC — Homepage</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --white:#fff; --bg:#f8fafc; --ink:#0b1220;
+    --blue:#2563eb; --blue2:#3b82f6; --muted:#6b7280;
+    --card:#ffffff; --border:#e5e7eb; --shadow:rgba(0,0,0,.07);
+    --section:#0f172a; --sectionText:#fff; --hint:#e2e8f0;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:'Inter',system-ui,Segoe UI,Roboto,Arial,sans-serif;}
+  a{text-decoration:none;color:inherit;}
+  .wrap{max-width:1100px;margin:0 auto;padding:24px}
+  header{display:flex;align-items:center;justify-content:space-between;padding:8px 0 18px;border-bottom:1px solid var(--border)}
+  .brand{display:flex;gap:12px;align-items:center}
+  .brand svg{width:30px;height:30px}
+  .brand h1{margin:0;font-size:1.35rem}
+  .sub{color:var(--muted);font-weight:600}
+  .bar{display:flex;gap:10px;flex-wrap:wrap}
+  .btn{appearance:none;border:1px solid transparent;background:var(--blue);color:#fff;padding:10px 14px;border-radius:10px;font-weight:700;cursor:pointer;font-size:16px}
+  .btn:hover{background:var(--blue2)}
+  .ghost{background:transparent;border-color:var(--blue);color:var(--blue)}
+  .ghost:hover{background:rgba(37,99,235,.08)}
+  footer{margin-top:20px;color:var(--muted);text-align:center}
+  
+  /* --- MOBILE APP-GRID LAUNCHER --- */
+  .launcher{display:none;}
+  @media(max-width:640px){
+    /* hide desktop sections/hero if needed */
+    .desktop-first, header.hero, .big-hero, .wide-section {display:none !important;}
+
+    .launcher{
+      display:block;
+      padding:16px;
     }
-    *{box-sizing:border-box}
-    html,body{margin:0;padding:0;background:var(--bg);color:#0b1220;font-family:'Inter',system-ui,Segoe UI,Roboto,Arial,sans-serif;}
-    .container{max-width:1100px;margin:0 auto;padding:32px}
-    header{display:flex;align-items:center;justify-content:space-between;padding:20px 0;border-bottom:1px solid var(--border);}
-    .brandmark{display:flex;align-items:center;gap:12px;}
-    .brandmark svg{width:30px;height:30px}
-    .brand{font-weight:800;letter-spacing:.3px;font-size:1.9rem;color:var(--blue);}
-    .sub{color:var(--gray);font-weight:600;font-size:1.1rem;}
-    .pill{display:inline-block;padding:6px 10px;border-radius:999px;font-size:.8rem;border:1px solid var(--blue);background:rgba(37,99,235,0.05);color:var(--blue);font-weight:600;}
-    .grid{display:grid;gap:24px;margin-top:36px;}
-    @media(min-width:800px){.grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
-    .card{
-      border:1px solid var(--border);
-      background:var(--white);
-      border-radius:18px;
-      padding:24px;
-      display:flex;
-      flex-direction:column;
-      gap:16px;
-      min-height:220px;
-      box-shadow:0 8px 24px var(--shadow);
-      transition:transform .2s ease, box-shadow .2s ease;
-    }
-    .card:hover{transform:translateY(-3px);box-shadow:0 12px 28px rgba(0,0,0,.12);}
-    .card h2{margin:0;font-size:1.35rem;color:#111827;}
-    .muted{color:var(--gray);margin:0;}
-    .actions{margin-top:auto;display:flex;gap:10px;flex-wrap:wrap;}
-    .btn{
-      appearance:none;
-      border:1px solid transparent;
-      background:var(--blue);
-      color:var(--white);
-      padding:10px 16px;
-      border-radius:10px;
-      text-decoration:none;
+    .launcher h2{
+      margin:0 0 10px 2px;
+      font-size:1rem;
+      color:#334155;
       font-weight:700;
-      display:inline-block;
-      transition:background .2s ease, transform .2s ease;
     }
-    .btn:hover{background:var(--blue-light);transform:translateY(-1px);}
-    .btn.ghost{background:transparent;border-color:var(--blue);color:var(--blue);}
-    .btn.ghost:hover{background:rgba(37,99,235,0.08);}
-    footer{margin-top:40px;color:var(--gray);text-align:center;padding:16px 0;border-top:1px solid var(--border);}
-  </style>
+    .app-grid{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:12px;
+    }
+    .app{
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      background:#ffffff;border:1px solid #e5e7eb;
+      border-radius:18px;
+      box-shadow:0 8px 22px rgba(0,0,0,.06);
+      text-decoration:none;color:#0b1220;
+      padding:12px 6px;min-height:92px;
+      transition:transform .08s ease, box-shadow .08s ease;
+    }
+    .app:active{transform:scale(.98);box-shadow:0 6px 16px rgba(0,0,0,.08);}
+    .app .ico{
+      width:42px;height:42px;border-radius:12px;
+      display:grid;place-items:center;
+      background:#eff6ff;
+      margin-bottom:6px;border:1px solid #dbeafe;
+    }
+    .app .ico svg{width:22px;height:22px}
+    .app .label{
+      font-size:.78rem;line-height:1.1;text-align:center;font-weight:700;
+      letter-spacing:.1px;
+    }
+    @media(max-width:380px){
+      .app-grid{grid-template-columns:repeat(3,1fr);}
+    }
+  }
+</style>
 </head>
 <body>
-  <div class="container">
-    <header>
-      <div class="brandmark">
-        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <path d="M12 2l2.6 5.3L20 8l-4 3.9.9 5.6L12 15.8 7.1 17.5 8 11.9 4 8l5.4-.7L12 2z" fill="#2563eb" opacity=".9"/>
-        </svg>
-        <div>
-          <div class="brand">Comet Builders LLC</div>
-          <div class="sub">Field Reporting Hub</div>
-        </div>
+<div class="wrap">
+
+  <header>
+    <div class="brand">
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M12 2l2.6 5.3L20 8l-4 3.9.9 5.6L12 15.8 7.1 17.5 8 11.9 4 8l5.4-.7L12 2z" fill="#2563eb"/>
+      </svg>
+      <div>
+        <h1>Comet Builders LLC</h1>
+        <div class="sub">Project Tools Portal</div>
       </div>
-      <span class="pill">Quick access to reporting tools</span>
-    </header>
+    </div>
+    <div class="bar">
+      <a href="daily.html" class="btn">Daily Reports</a>
+      <a href="receipts.html" class="btn ghost">Receipts</a>
+      <a href="final-walk.html" class="btn ghost">Final Walk</a>
+      <a href="demlr.html" class="btn ghost">DEMLR</a>
+      <a href="map-backflows.html" class="btn ghost">Backflow Map</a>
+    </div>
+  </header>
 
-    <section class="grid">
-      <!-- Daily Reports -->
-      <article class="card">
-        <span class="pill">Daily Reports</span>
-        <h2>Daily Report Portal</h2>
-        <p class="muted">Create and manage your daily field reports. Keep that paper trail tighter than your cable management.</p>
-        <div class="actions">
-          <a href="daily.html" class="btn">Open Daily Reports</a>
-        </div>
-      </article>
+  <!-- Normal desktop sections remain here -->
+  <section class="desktop-first" style="margin-top:30px;">
+    <div class="card" style="padding:20px;border-radius:16px;background:var(--card);border:1px solid var(--border);box-shadow:0 8px 22px var(--shadow);">
+      <h2 style="margin-top:0">Welcome to Comet Builders Field Tools</h2>
+      <p style="color:var(--muted);max-width:600px;">Access reporting templates, inspection forms, and project documentation all in one place.</p>
+    </div>
+  </section>
 
-      <!-- DEMLR -->
-      <article class="card">
-        <span class="pill">DEMLR Monitoring</span>
-        <h2>DEMLR Weather Tracking & Inspection</h2>
-        <p class="muted">Fill out the DEMLR monitoring form in-browser and export to PDF. Clean white layout, built for inspectors.</p>
-        <div class="actions">
-          <a href="demlr.html" class="btn">Open DEMLR Page</a>
-          <a href="DEMLR-Monitoring-Form-Rev-07012020.pdf" class="btn ghost" download>Download Official PDF</a>
-        </div>
-      </article>
+  <!-- MOBILE APP-GRID LAUNCHER (phones only) -->
+  <section class="launcher">
+    <h2>Quick Actions</h2>
+    <div class="app-grid">
+      <a class="app" href="daily.html">
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none"><path d="M7 3v3M17 3v3M4 9h16M5 7h14a2 2 0 0 1 2 2v9a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V9a2 2 0 0 1 2-2Z" stroke="#2563eb" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="label">Daily Report</div>
+      </a>
 
-      <!-- Receipts -->
-      <article class="card">
-        <span class="pill">Receipts</span>
-        <h2>Receipt Upload Portal</h2>
-        <p class="muted">Quickly snap and upload purchase receipts directly to accounting. Auto-emails accts@cometdev.com with photo attachment.</p>
-        <div class="actions">
-          <a href="receipts.html" class="btn">Open Receipts Page</a>
-        </div>
-      </article>
+      <a class="app" href="receipts.html">
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none"><path d="M7 3h10a2 2 0 0 1 2 2v14l-3-2-3 2-3-2-3 2V5a2 2 0 0 1 2-2Z" stroke="#2563eb" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M9 8h6M9 12h6" stroke="#2563eb" stroke-width="1.6" stroke-linecap="round"/></svg></div>
+        <div class="label">Receipts</div>
+      </a>
 
-      <!-- 811 -->
-      <article class="card">
-        <span class="pill">811 Locate Updates</span>
-        <h2>Update or Check Locates</h2>
-        <p class="muted">Access the official 811 site to submit new locate requests or check existing tickets before digging.</p>
-        <div class="actions">
-          <a href="https://nc811.org/" target="_blank" class="btn">Open 811 Portal</a>
-        </div>
-      </article>
+      <a class="app" href="final-walk.html">
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none"><path d="M9 7h8M9 12h8M9 17h8M5 7h.01M5 12h.01M5 17h.01" stroke="#2563eb" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="label">Final Walk</div>
+      </a>
 
-      <!-- Punchlist Template -->
-      <article class="card">
-        <span class="pill">Punchlist</span>
-        <h2>Initial Punchlist Template</h2>
-        <p class="muted">Create, assign, and track punchlist items per building and trade. Export completed lists to PDF for closeout packages.</p>
-        <div class="actions">
-          <a href="punchlist.html" class="btn">Open Punchlist</a>
-        </div>
-      </article>
+      <a class="app" href="demlr.html">
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3s6 6.2 6 10a6 6 0 1 1-12 0c0-3.8 6-10 6-10Z" stroke="#2563eb" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="label">DEMLR</div>
+      </a>
 
-      <!-- Final Building Walk -->
-      <article class="card">
-        <span class="pill">Punchlist</span>
-        <h2>Final Building Walk</h2>
-        <p class="muted">Room-by-room closeout inspection form with wide notes, responsible party, and initials columns.</p>
-        <div class="actions">
-          <a href="building-walk.html" class="btn">Open Final Walk</a>
-        </div>
-      </article>
-    </section>
+      <a class="app" href="map-backflows.html">
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none"><path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11Z" stroke="#2563eb" stroke-width="1.6"/><circle cx="12" cy="10" r="2.8" stroke="#2563eb" stroke-width="1.6"/></svg></div>
+        <div class="label">Backflow Map</div>
+      </a>
 
-    <footer>
-      © <span id="year"></span> Comet Builders LLC 
-    </footer>
-  </div>
+      <a class="app" href="docs.html">
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v7a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V7Z" stroke="#2563eb" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="label">Docs</div>
+      </a>
+    </div>
+  </section>
 
-  <script>
-    document.getElementById('year').textContent = new Date().getFullYear();
-  </script>
+  <footer>© <span id="yy"></span> Comet Builders LLC</footer>
+</div>
+
+<script>
+  document.getElementById('yy').textContent = new Date().getFullYear();
+</script>
 </body>
 </html>
