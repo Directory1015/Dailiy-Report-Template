@@ -35,6 +35,7 @@
     .row{display:grid;grid-template-columns:repeat(12,1fr);gap:12px;margin-bottom:10px}
     label{font-size:12px;color:var(--muted)}
 
+    /* Inputs */
     input[type="text"],input[type="number"],input[type="date"],input[type="datetime-local"],
     input[type="email"],input[type="time"],select,textarea{
       width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:#fff;color:var(--ink);
@@ -43,30 +44,50 @@
     .checklist{display:grid;gap:8px}
     .tools{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 0}
 
-    table{width:100%;border-collapse:collapse}
-    th,td{border:1px solid var(--border);padding:8px;text-align:left;vertical-align:top}
+    /* Tables */
+    table{width:100%;border-collapse:collapse;table-layout:fixed} /* fixed + wrapping = no overlap */
+    th,td{border:1px solid var(--border);padding:8px;text-align:left;vertical-align:top;overflow-wrap:anywhere;word-break:normal;white-space:normal}
     th{background:#f8fafc}
     .tight td,.tight th{padding:6px}
     .small{font-size:12px;color:var(--muted)}
     .info{background:#f8fafc;border:1px solid var(--border);border-radius:10px;padding:10px}
 
-    /* Y/N/NA cells: whole cell is a label that toggles the radio (no JS needed) */
+    /* Scroll wrapper for wide tables (unclipped on print) */
+    .scrollwrap{overflow:auto;margin-top:8px;border-radius:10px}
+    .scrollwrap table{min-width:900px} /* keeps columns readable on small screens */
+
+    /* Y/N/NA cells (pure HTML label = clickable) */
     .ynna-cell{padding:0}
     .ynna-cell label.selector{
       display:flex;align-items:center;justify-content:center;
       width:100%;height:100%;cursor:pointer;padding:6px;
     }
-    .ynna-cell input[type="radio"]{
-      width:18px;height:18px;accent-color:currentColor;
+    .ynna-cell input[type="radio"]{width:18px;height:18px;accent-color:currentColor}
+
+    @media (max-width:900px){
+      .row{grid-template-columns:repeat(6,1fr)}
+    }
+    @media (max-width:700px){
+      th,td{padding:6px;font-size:12px}         /* tighten table text on phones */
+      .card h2{font-size:15px}
+      .scrollwrap table{min-width:700px}
+      input,select,textarea{font-size:14px}
+    }
+    @media (max-width:600px){
+      .row{grid-template-columns:repeat(2,1fr)}
+      .scrollwrap table{min-width:650px}
     }
 
-    @media (max-width:900px){ .row{grid-template-columns:repeat(6,1fr)} }
-    @media (max-width:600px){ .row{grid-template-columns:repeat(2,1fr)} }
-
+    /* PRINT: unclip, let tables break nicely with repeating headers */
     @media print{
       header,.actions,.tools,.btn{display:none !important}
       body{background:#fff !important;color:#000 !important}
       .card{break-inside:avoid;border:1px solid #000 !important}
+      .scrollwrap{overflow:visible !important}          /* <-- key fix: no clipping */
+      table{width:100% !important;min-width:auto !important}
+      thead{display:table-header-group}                 /* repeat header each page */
+      tfoot{display:table-footer-group}
+      tr{page-break-inside:avoid}                       /* don’t split a row */
       input,select,textarea{background:#fff !important;color:#000 !important;-webkit-text-fill-color:#000 !important;border:1px solid #000 !important}
       th,td{border-color:#000 !important;color:#000 !important}
       th{background:#fff !important;color:#000 !important}
@@ -90,7 +111,7 @@
 
   <div class="wrap">
     <section class="grid">
-      <!-- Project Information -->
+      <!-- Project Meta -->
       <div class="card">
         <h2>Project Information</h2>
         <div class="row">
@@ -172,41 +193,11 @@
             <tr><th style="width:60px">Ref</th><th>Question</th><th style="width:70px">Yes</th><th style="width:70px">No</th><th style="width:70px">N/A</th></tr>
           </thead>
           <tbody>
-            <tr>
-              <td>C</td>
-              <td>Are erosion and sediment controls shown on the approved plan installed and operating properly with no repairs needed?</td>
-              <td class="ynna-cell"><label class="selector" for="p2b_0_y"><input id="p2b_0_y" type="radio" name="p2b_0" value="Y"></label></td>
-              <td class="ynna-cell"><label class="selector" for="p2b_0_n"><input id="p2b_0_n" type="radio" name="p2b_0" value="N"></label></td>
-              <td class="ynna-cell"><label class="selector" for="p2b_0_na"><input id="p2b_0_na" type="radio" name="p2b_0" value="NA"></label></td>
-            </tr>
-            <tr>
-              <td>D</td>
-              <td>Are stormwater controls shown on the approved plan installed and operating properly with no repairs needed?</td>
-              <td class="ynna-cell"><label class="selector" for="p2b_1_y"><input id="p2b_1_y" type="radio" name="p2b_1" value="Y"></label></td>
-              <td class="ynna-cell"><label class="selector" for="p2b_1_n"><input id="p2b_1_n" type="radio" name="p2b_1" value="N"></label></td>
-              <td class="ynna-cell"><label class="selector" for="p2b_1_na"><input id="p2b_1_na" type="radio" name="p2b_1" value="NA"></label></td>
-            </tr>
-            <tr>
-              <td>E</td>
-              <td>Vehicle Tracking: Are construction entrances operating properly with no repairs needed?</td>
-              <td class="ynna-cell"><label class="selector" for="p2b_2_y"><input id="p2b_2_y" type="radio" name="p2b_2" value="Y"></label></td>
-              <td class="ynna-cell"><label class="selector" for="p2b_2_n"><input id="p2b_2_n" type="radio" name="p2b_2" value="N"></label></td>
-              <td class="ynna-cell"><label class="selector" for="p2b_2_na"><input id="p2b_2_na" type="radio" name="p2b_2" value="NA"></label></td>
-            </tr>
-            <tr>
-              <td>F</td>
-              <td>Soil Stabilization: Are areas where construction activities have ceased properly stabilized within required timeframes?</td>
-              <td class="ynna-cell"><label class="selector" for="p2b_3_y"><input id="p2b_3_y" type="radio" name="p2b_3" value="Y"></label></td>
-              <td class="ynna-cell"><label class="selector" for="p2b_3_n"><input id="p2b_3_n" type="radio" name="p2b_3" value="N"></label></td>
-              <td class="ynna-cell"><label class="selector" for="p2b_3_na"><input id="p2b_3_na" type="radio" name="p2b_3" value="NA"></label></td>
-            </tr>
-            <tr>
-              <td>G</td>
-              <td>Are earthen stockpiles stabilized or otherwise protected, and located at least 50 ft away or downhill from drain inlets and surface waters?</td>
-              <td class="ynna-cell"><label class="selector" for="p2b_4_y"><input id="p2b_4_y" type="radio" name="p2b_4" value="Y"></label></td>
-              <td class="ynna-cell"><label class="selector" for="p2b_4_n"><input id="p2b_4_n" type="radio" name="p2b_4" value="N"></label></td>
-              <td class="ynna-cell"><label class="selector" for="p2b_4_na"><input id="p2b_4_na" type="radio" name="p2b_4" value="NA"></label></td>
-            </tr>
+            <tr><td>C</td><td>Are erosion and sediment controls shown on the approved plan installed and operating properly with no repairs needed?</td><td class="ynna-cell"><label class="selector" for="p2b_0_y"><input id="p2b_0_y" type="radio" name="p2b_0" value="Y"></label></td><td class="ynna-cell"><label class="selector" for="p2b_0_n"><input id="p2b_0_n" type="radio" name="p2b_0" value="N"></label></td><td class="ynna-cell"><label class="selector" for="p2b_0_na"><input id="p2b_0_na" type="radio" name="p2b_0" value="NA"></label></td></tr>
+            <tr><td>D</td><td>Are stormwater controls shown on the approved plan installed and operating properly with no repairs needed?</td><td class="ynna-cell"><label class="selector" for="p2b_1_y"><input id="p2b_1_y" type="radio" name="p2b_1" value="Y"></label></td><td class="ynna-cell"><label class="selector" for="p2b_1_n"><input id="p2b_1_n" type="radio" name="p2b_1" value="N"></label></td><td class="ynna-cell"><label class="selector" for="p2b_1_na"><input id="p2b_1_na" type="radio" name="p2b_1" value="NA"></label></td></tr>
+            <tr><td>E</td><td>Vehicle Tracking: Are construction entrances operating properly with no repairs needed?</td><td class="ynna-cell"><label class="selector" for="p2b_2_y"><input id="p2b_2_y" type="radio" name="p2b_2" value="Y"></label></td><td class="ynna-cell"><label class="selector" for="p2b_2_n"><input id="p2b_2_n" type="radio" name="p2b_2" value="N"></label></td><td class="ynna-cell"><label class="selector" for="p2b_2_na"><input id="p2b_2_na" type="radio" name="p2b_2" value="NA"></label></td></tr>
+            <tr><td>F</td><td>Soil Stabilization: Are areas where construction activities have ceased properly stabilized within required timeframes?</td><td class="ynna-cell"><label class="selector" for="p2b_3_y"><input id="p2b_3_y" type="radio" name="p2b_3" value="Y"></label></td><td class="ynna-cell"><label class="selector" for="p2b_3_n"><input id="p2b_3_n" type="radio" name="p2b_3" value="N"></label></td><td class="ynna-cell"><label class="selector" for="p2b_3_na"><input id="p2b_3_na" type="radio" name="p2b_3" value="NA"></label></td></tr>
+            <tr><td>G</td><td>Are earthen stockpiles stabilized or otherwise protected, and located at least 50 ft away or downhill from drain inlets and surface waters?</td><td class="ynna-cell"><label class="selector" for="p2b_4_y"><input id="p2b_4_y" type="radio" name="p2b_4" value="Y"></label></td><td class="ynna-cell"><label class="selector" for="p2b_4_n"><input id="p2b_4_n" type="radio" name="p2b_4" value="N"></label></td><td class="ynna-cell"><label class="selector" for="p2b_4_na"><input id="p2b_4_na" type="radio" name="p2b_4" value="NA"></label></td></tr>
           </tbody>
         </table>
         <div class="small info" style="margin-top:8px">Report oil spills and releases of hazardous substances to the appropriate DEQ Regional Office within 24 hours of discovery.</div>
@@ -217,36 +208,12 @@
           <thead>
             <tr><th style="width:60px">Ref</th><th>Question</th><th style="width:70px">Yes</th><th style="width:70px">No</th><th style="width:70px">N/A</th></tr>
           </thead>
-          <tbody>
-            <tr>
-              <td>H</td>
-              <td>Concrete, stucco, paint, etc. washouts: Installed, properly located, posted and operating with no repairs needed?</td>
-              <td class="ynna-cell"><label class="selector" for="p2c_0_y"><input id="p2c_0_y" type="radio" name="p2c_0" value="Y"></label></td>
-              <td class="ynna-cell"><label class="selector" for="p2c_0_n"><input id="p2c_0_n" type="radio" name="p2c_0" value="N"></label></td>
-              <td class="ynna-cell"><label class="selector" for="p2c_0_na"><input id="p2c_0_na" type="radio" name="p2c_0" value="NA"></label></td>
-            </tr>
-            <tr>
-              <td>I</td>
-              <td>Solid &amp; hazardous wastes: Are trash, debris, and hazardous materials properly managed?</td>
-              <td class="ynna-cell"><label class="selector" for="p2c_1_y"><input id="p2c_1_y" type="radio" name="p2c_1" value="Y"></label></td>
-              <td class="ynna-cell"><label class="selector" for="p2c_1_n"><input id="p2c_1_n" type="radio" name="p2c_1" value="N"></label></td>
-              <td class="ynna-cell"><label class="selector" for="p2c_1_na"><input id="p2c_1_na" type="radio" name="p2c_1" value="NA"></label></td>
-            </tr>
-            <tr>
-              <td>J</td>
-              <td>Sanitary waste: Are portable toilets properly located and operating with no visible repairs needed?</td>
-              <td class="ynna-cell"><label class="selector" for="p2c_2_y"><input id="p2c_2_y" type="radio" name="p2c_2" value="Y"></label></td>
-              <td class="ynna-cell"><label class="selector" for="p2c_2_n"><input id="p2c_2_n" type="radio" name="p2c_2" value="N"></label></td>
-              <td class="ynna-cell"><label class="selector" for="p2c_2_na"><input id="p2c_2_na" type="radio" name="p2c_2" value="NA"></label></td>
-            </tr>
-            <tr>
-              <td>K</td>
-              <td>Equipment and stored fluids: Are fuels, lubricants, hydraulic fluids, etc. contained so as not to enter surface and ground waters?</td>
-              <td class="ynna-cell"><label class="selector" for="p2c_3_y"><input id="p2c_3_y" type="radio" name="p2c_3" value="Y"></label></td>
-              <td class="ynna-cell"><label class="selector" for="p2c_3_n"><input id="p2c_3_n" type="radio" name="p2c_3" value="N"></label></td>
-              <td class="ynna-cell"><label class="selector" for="p2c_3_na"><input id="p2c_3_na" type="radio" name="p2c_3" value="NA"></label></td>
-            </tr>
-          </tbody>
+        <tbody>
+          <tr><td>H</td><td>Concrete, stucco, paint, etc. washouts: Installed, properly located, posted and operating with no repairs needed?</td><td class="ynna-cell"><label class="selector" for="p2c_0_y"><input id="p2c_0_y" type="radio" name="p2c_0" value="Y"></label></td><td class="ynna-cell"><label class="selector" for="p2c_0_n"><input id="p2c_0_n" type="radio" name="p2c_0" value="N"></label></td><td class="ynna-cell"><label class="selector" for="p2c_0_na"><input id="p2c_0_na" type="radio" name="p2c_0" value="NA"></label></td></tr>
+          <tr><td>I</td><td>Solid &amp; hazardous wastes: Are trash, debris, and hazardous materials properly managed?</td><td class="ynna-cell"><label class="selector" for="p2c_1_y"><input id="p2c_1_y" type="radio" name="p2c_1" value="Y"></label></td><td class="ynna-cell"><label class="selector" for="p2c_1_n"><input id="p2c_1_n" type="radio" name="p2c_1" value="N"></label></td><td class="ynna-cell"><label class="selector" for="p2c_1_na"><input id="p2c_1_na" type="radio" name="p2c_1" value="NA"></label></td></tr>
+          <tr><td>J</td><td>Sanitary waste: Are portable toilets properly located and operating with no visible repairs needed?</td><td class="ynna-cell"><label class="selector" for="p2c_2_y"><input id="p2c_2_y" type="radio" name="p2c_2" value="Y"></label></td><td class="ynna-cell"><label class="selector" for="p2c_2_n"><input id="p2c_2_n" type="radio" name="p2c_2" value="N"></label></td><td class="ynna-cell"><label class="selector" for="p2c_2_na"><input id="p2c_2_na" type="radio" name="p2c_2" value="NA"></label></td></tr>
+          <tr><td>K</td><td>Equipment and stored fluids: Are fuels, lubricants, hydraulic fluids, etc. contained so as not to enter surface and ground waters?</td><td class="ynna-cell"><label class="selector" for="p2c_3_y"><input id="p2c_3_y" type="radio" name="p2c_3" value="Y"></label></td><td class="ynna-cell"><label class="selector" for="p2c_3_n"><input id="p2c_3_n" type="radio" name="p2c_3" value="N"></label></td><td class="ynna-cell"><label class="selector" for="p2c_3_na"><input id="p2c_3_na" type="radio" name="p2c_3" value="NA"></label></td></tr>
+        </tbody>
         </table>
         <div class="small info" style="margin-top:8px">Report visible sedimentation into streams or wetlands to the appropriate DEQ Regional Office within 24 hours of discovery.</div>
 
@@ -279,11 +246,7 @@
       <div class="card">
         <h2>Part 3A — Erosion &amp; Sedimentation Control Measures</h2>
         <div class="small">Inspect at least once per 7 calendar days and within 24 hours of ≥ 1.0" rainfall in 24 hours.</div>
-        <div class="tools">
-          <button type="button" class="btn" id="addP3aRow">+ Add Row</button>
-          <button type="button" class="btn ghost" id="clearP3a">Clear</button>
-        </div>
-        <div style="overflow:auto;margin-top:8px">
+        <div class="scrollwrap">
           <table id="part3aTable">
             <thead>
               <tr>
@@ -306,11 +269,7 @@
       <div class="card">
         <h2>Part 3B — Stormwater Discharge Outfalls (SDOs)</h2>
         <div class="small">Inspect at least once per 7 calendar days and within 24 hours of ≥ 1.0" rainfall in 24 hours.</div>
-        <div class="tools">
-          <button type="button" class="btn" id="addP3bRow">+ Add Row</button>
-          <button type="button" class="btn ghost" id="clearP3b">Clear</button>
-        </div>
-        <div style="overflow:auto;margin-top:8px">
+        <div class="scrollwrap">
           <table id="part3bTable">
             <thead>
               <tr>
@@ -334,11 +293,7 @@
       <div class="card">
         <h2>Part 3C — Ground Stabilization</h2>
         <div class="small">Must be recorded, at a minimum, after each phase. Add rows as needed.</div>
-        <div class="tools">
-          <button type="button" class="btn" id="addP3cRow">+ Add Row</button>
-          <button type="button" class="btn ghost" id="clearP3c">Clear</button>
-        </div>
-        <div style="overflow:auto;margin-top:8px">
+        <div class="scrollwrap">
           <table id="part3cTable">
             <thead>
               <tr>
@@ -362,11 +317,7 @@
       <div class="card">
         <h2>Part 3D — New or Revised Measures</h2>
         <div class="small">Document measures omitted/installed/altered/relocated/removed since last inspection. Add rows as needed. Corrective actions should be included in Part 3A.</div>
-        <div class="tools">
-          <button type="button" class="btn" id="addP3dRow">+ Add Row</button>
-          <button type="button" class="btn ghost" id="clearP3d">Clear</button>
-        </div>
-        <div style="overflow:auto;margin-top:8px">
+        <div class="scrollwrap">
           <table id="part3dTable">
             <thead>
               <tr>
@@ -416,12 +367,12 @@
     </section>
   </div>
 
-  <!-- JS: save/restore + tables (radio cells need no JS) -->
+  <!-- JS: radios work via labels; below is save/restore + tables -->
   <script>
   (function(){
     function $(s,r){return (r||document).querySelector(s)}
     function $$(s,r){return Array.from((r||document).querySelectorAll(s))}
-    const STORAGE_KEY='demlrDrafts_v7'; // bump to bust stale cache
+    const STORAGE_KEY='demlrDrafts_v8'; // bump to bust old cache
     let currentId=null;
     const uid=()=>Math.random().toString(36).slice(2)+Date.now().toString(36);
     const getDrafts=()=>{try{return JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]')}catch(e){return[]}}
@@ -440,7 +391,7 @@
       const rows=$$(sel+' tbody tr');
       (data||[]).forEach((row,i)=>{
         const tr=rows[i]; if(!tr) return;
-        const choice = row[2]==='Y'?'Y': row[3]==='Y'?'N' : row[4]==='Y'?'NA':'';
+        const choice=row[2]==='Y'?'Y':row[3]==='Y'?'N':row[4]==='Y'?'NA':'';
         if(!choice) return;
         const r=tr.querySelector('input[type="radio"][value="'+choice+'"]');
         if(r) r.checked=true;
@@ -584,5 +535,6 @@
   </script>
 </body>
 </html>
+
 
 
