@@ -39,9 +39,10 @@
   .two{display:grid;gap:14px}
   @media(min-width:800px){.two{grid-template-columns:1fr 1fr}}
   .three{display:grid;gap:14px}
-  @media(min-width:900px){.three{grid-template-columns:1.2fr 1fr 1fr}}
+  @media(min-width:900px){.three{grid-template-columns:1.1fr 1fr 1fr}}
 
-  table{width:100%;border-collapse:separate;border-spacing:0;overflow:hidden;border-radius:14px;border:1px solid var(--border);background:#fff}
+  .table-wrap{overflow:auto;border-radius:14px;border:1px solid var(--border);background:#fff}
+  table{width:100%;border-collapse:separate;border-spacing:0;min-width:720px}
   thead th{position:sticky;top:0;background:#f1f5f9;border-bottom:1px solid var(--border);padding:10px 8px;text-align:left;font-size:.9rem}
   tbody td{border-top:1px solid var(--border);padding:0}
   tbody tr:first-child td{border-top:none}
@@ -65,6 +66,13 @@
     .card{box-shadow:none;border:1px solid #ddd;page-break-inside:avoid}
     thead th{background:#eaf0ff !important}
     a[href]:after{content:""}
+    .table-wrap{overflow:visible; border:none}
+  }
+
+  /* Small-screen tweaks */
+  @media(max-width:640px){
+    .brand h1{font-size:1.1rem}
+    .sub{font-size:.9rem}
   }
 </style>
 </head>
@@ -79,6 +87,7 @@
       </div>
     </div>
     <div class="bar no-export">
+      <a href="index.html" class="btn ghost">← Back to Home</a>
       <button class="btn" onclick="doPrint()">Print</button>
       <button class="btn ghost" onclick="downloadPDF()">Download PDF</button>
       <button class="btn ghost" onclick="saveState()">Save</button>
@@ -91,12 +100,18 @@
     <div class="card">
       <div class="three">
         <div>
-          <label>Project Name</label>
-          <input id="proj" placeholder="e.g., Comet Westgate">
+          <label>Company</label>
+          <input id="company" value="Comet Builders LLC" readonly>
         </div>
         <div>
-          <label>Site Contact</label>
-          <input id="contact" placeholder="Name + phone">
+          <label>Project</label>
+          <select id="project">
+            <option value="">Select project…</option>
+            <option>Comet Pittsboro</option>
+            <option>Comet Richlands</option>
+            <option>Comet North Raleigh</option>
+            <option>Comet Lake Jeanette</option>
+          </select>
         </div>
         <div>
           <label>Date</label>
@@ -105,13 +120,17 @@
       </div>
       <div class="two" style="margin-top:14px">
         <div>
+          <label>Site Contact</label>
+          <input id="contact" placeholder="Name + phone">
+        </div>
+        <div>
           <label>Building / Phase</label>
           <input id="building" placeholder="e.g., B01 or Phase 1">
         </div>
-        <div>
-          <label>General Notes</label>
-          <input id="gn" placeholder="Optional header notes">
-        </div>
+      </div>
+      <div style="margin-top:14px">
+        <label>General Notes</label>
+        <input id="gn" placeholder="Optional header notes">
       </div>
     </div>
 
@@ -120,17 +139,19 @@
         <button class="btn" onclick="addRow()">Add Row</button>
         <button class="btn ghost" onclick="addTen()">Add 10 Rows</button>
       </div>
-      <table id="plist">
-        <thead>
-          <tr>
-            <th style="width:80px"># / Highlight</th>
-            <th style="width:160px">Unit / Address</th>
-            <th>Item Description</th>
-            <th style="width:28%">Notes</th>
-          </tr>
-        </thead>
-        <tbody id="body"></tbody>
-      </table>
+      <div class="table-wrap">
+        <table id="plist">
+          <thead>
+            <tr>
+              <th style="width:80px"># / Highlight</th>
+              <th style="width:160px">Unit / Address</th>
+              <th>Item Description</th>
+              <th style="width:28%">Notes</th>
+            </tr>
+          </thead>
+          <tbody id="body"></tbody>
+        </table>
+      </div>
     </div>
   </section>
 
@@ -142,7 +163,7 @@
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 
 <script>
-  const KEY = 'punchlist_initial_v1';
+  const KEY = 'punchlist_initial_v2';
   document.getElementById('yy').textContent = new Date().getFullYear();
   document.getElementById('date').valueAsDate = new Date();
 
@@ -179,20 +200,23 @@
     });
     return {
       meta:{
-        proj:val('proj'), contact:val('contact'), date:val('date'),
-        building:val('building'), gn:val('gn')
+        company:'Comet Builders LLC',
+        project:document.getElementById('project').value,
+        date:document.getElementById('date').value,
+        contact:document.getElementById('contact').value,
+        building:document.getElementById('building').value,
+        gn:document.getElementById('gn').value
       },
       rows
     };
   }
-  const val=id=>document.getElementById(id).value;
 
   function applyState(obj){
     if(!obj) return;
     const {meta, rows} = obj;
-    document.getElementById('proj').value = meta?.proj || '';
-    document.getElementById('contact').value = meta?.contact || '';
+    document.getElementById('project').value = meta?.project || '';
     document.getElementById('date').value = meta?.date || new Date().toISOString().slice(0,10);
+    document.getElementById('contact').value = meta?.contact || '';
     document.getElementById('building').value = meta?.building || '';
     document.getElementById('gn').value = meta?.gn || '';
     const body = document.getElementById('body');
@@ -222,20 +246,13 @@
 
   /* ---------- PDF EXPORT ---------- */
   async function downloadPDF(){
-    await saveBeforeExport();
-    await exportElementToPDF(document.getElementById('content'),
-      makeFilename('Initial-Punchlist'));
-  }
-
-  async function saveBeforeExport(){
-    // Hide export-only controls during capture
     document.body.classList.add('exporting');
     await new Promise(r=>setTimeout(r, 50));
-  }
-
-  async function exportElementToPDF(el, filename){
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({orientation:'p', unit:'pt', format:'letter'});
+    const el = document.getElementById('content');
+
+    // Expand table horizontally for mobile capture
     const canvas = await html2canvas(el, {scale:2, useCORS:true, windowWidth: el.scrollWidth});
     const imgData = canvas.toDataURL('image/png');
 
@@ -257,16 +274,13 @@
       heightLeft -= pdfH;
     }
 
-    doc.save(filename + '.pdf');
-    document.body.classList.remove('exporting');
-  }
-
-  function makeFilename(prefix){
     const date = (document.getElementById('date').value || new Date().toISOString().slice(0,10));
-    const proj = (document.getElementById('proj').value || 'Project').replace(/[^\w-]+/g,'_');
+    const proj = (document.getElementById('project').value || 'Project').replace(/[^\w-]+/g,'_');
     const bldg = (document.getElementById('building').value || 'Bldg').replace(/[^\w-]+/g,'_');
-    return `${prefix}—${proj}—${bldg}—${date}`;
+    doc.save(`Initial-Punchlist—${proj}—${bldg}—${date}.pdf`);
+    document.body.classList.remove('exporting');
   }
 </script>
 </body>
 </html>
+
