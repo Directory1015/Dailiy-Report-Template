@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+<title>Comet — Final Building Walk</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --white:#fff; --bg:#f8fafc; --ink:#0b1220;
+    --blue:#2563eb; --blue2:#3b82f6; --muted:#6b7280;
+    --card:#ffffff; --border:#e5e7eb; --shadow:rgba(0,0,0,.07);
+    --section:#0f172a; --sectionText:#fff;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:'Inter',system-ui,Segoe UI,Roboto,Arial,sans-serif;}
+  .wrap{max-width:1100px;margin:0 auto;padding:24px}
+  header{display:flex;align-items:center;justify-content:space-between;padding:8px 0 18px;border-bottom:1px solid var(--border)}
+  .brand{display:flex;gap:12px;align-items:center}
+  .brand svg{width:30px;height:30px}
+  .brand h1{margin:0;font-size:1.35rem}
+  .sub{color:var(--muted);font-weight:600}
+  .bar{display:flex;gap:10px;flex-wrap:wrap}
+  .btn{appearance:none;border:1px solid transparent;background:var(--blue);color:#fff;padding:10px 14px;border-radius:10px;font-weight:700;cursor:pointer}
+  .btn:hover{background:var(--blue2)}
+  .ghost{background:transparent;border-color:var(--blue);color:var(--blue)}
+  .ghost:hover{background:rgba(37,99,235,.08)}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:18px;box-shadow:0 8px 22px var(--shadow);margin-top:16px}
+
+  label{font-weight:600;font-size:.95rem;color:#111827}
+  input, textarea, select{width:100%;padding:12px 12px;font-size:16px;border:1px solid var(--border);border-radius:10px;background:#fff}
+  textarea{min-height:68px;resize:vertical}
+  .grid2{display:grid;gap:14px}
+  @media(min-width:860px){.grid2{grid-template-columns:1.1fr 1fr 1fr}}
+
+  .section{margin-top:18px;border:1px solid var(--border);border-radius:14px;overflow:hidden}
+  .section .head{background:var(--section);color:var(--sectionText);padding:10px 14px;font-weight:800}
+  .rows{display:grid;grid-template-columns:1.2fr 2fr .9fr .9fr .6fr;gap:0;border-top:1px solid var(--border)}
+  .r{display:contents}
+  .rows > div{border-top:1px solid var(--border)}
+  .rows b{display:flex;align-items:center;padding:10px 12px;background:#f8fafc;border-right:1px solid var(--border);font-weight:700}
+  .rows .cell{padding:0}
+  .rows .cell textarea, .rows .cell input{border:none;border-radius:0;width:100%;padding:10px 10px;font-size:16px}
+  .rows .th{background:#f1f5f9;font-weight:700}
+  .rows .th div{padding:10px 12px;border-right:1px solid var(--border)}
+  .rows .th div:last-child{border-right:none}
+
+  body.exporting .no-export{display:none !important}
+
+  footer{margin-top:20px;color:var(--muted);text-align:center}
+
+  @media print{
+    header .bar, .no-print{display:none !important}
+    .card{box-shadow:none;border:1px solid #ddd;page-break-inside:avoid}
+    body{background:#fff}
+    a[href]:after{content:""}
+  }
+</style>
+</head>
+<body>
+<div class="wrap" id="content">
+  <header>
+    <div class="brand">
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 2l2.6 5.3L20 8l-4 3.9.9 5.6L12 15.8 7.1 17.5 8 11.9 4 8l5.4-.7L12 2z" fill="#2563eb"/></svg>
+      <div>
+        <h1>Comet Builders LLC</h1>
+        <div class="sub">Final Building Walk</div>
+      </div>
+    </div>
+    <div class="bar no-export">
+      <button class="btn" onclick="window.print()">Print</button>
+      <button class="btn ghost" onclick="downloadPDF()">Download PDF</button>
+      <button class="btn ghost" onclick="saveState()">Save</button>
+      <button class="btn ghost" onclick="loadState()">Load</button>
+      <button class="btn ghost" onclick="clearState()">Clear</button>
+    </div>
+  </header>
+
+  <section class="card">
+    <div class="grid2">
+      <div>
+        <label>Project</label>
+        <input id="proj" placeholder="Comet Westgate">
+      </div>
+      <div>
+        <label>Building</label>
+        <input id="bldg" placeholder="B01 / Address">
+      </div>
+      <div>
+        <label>Unit # / Type</label>
+        <input id="unit" placeholder="101 • 2BR">
+      </div>
+    </div>
+    <div class="grid2" style="margin-top:12px">
+      <div>
+        <label>First Walk Date</label>
+        <input id="first" type="date">
+      </div>
+      <div>
+        <label>Acceptance Walk Date</label>
+        <input id="accept" type="date">
+      </div>
+      <div>
+        <label>Construction Rep</label>
+        <input id="rep" placeholder="Name">
+      </div>
+    </div>
+  </section>
+
+  <!-- Section Builder -->
+  <div id="sections"></div>
+
+  <footer>© <span id="yy"></span> Comet Builders LLC</footer>
+</div>
+
+<!-- PDF libs -->
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+
+<script>
+  const KEY = 'punchlist_final_v1';
+  document.getElementById('yy').textContent = new Date().getFullYear();
+  document.getElementById('first').valueAsDate = new Date();
+
+  const SECTIONS = [
+    { title:'Mechanical Function',
+      rows:['HVAC','Plumbing','Electrical','Telecommunications / Smart Panel','Wall Jacks']},
+    { title:'Appliances', rows:['Refrigerator','Range','Microwave','Dishwasher','Disposal']},
+    { title:'Front Door', rows:['General / Hardware']},
+    { title:'Kitchen', rows:['Sink & Faucet','Cabinetry','Flooring','Walls','Other']},
+    { title:'Living Room', rows:['Flooring','Walls','Other']},
+    { title:'Patio', rows:['General']},
+    { title:'Master Bedroom', rows:['Flooring','Closet / Doors','Other']},
+    { title:'Master Bathroom', rows:['Sink & Faucet','Commode','Tub / Shower','Mirror','Flooring','Walls','Other']},
+    { title:'Guest Bedroom', rows:['Flooring','Closet / Doors','Other']},
+    { title:'Guest Bathroom', rows:['Sink & Faucet','Commode','Tub / Shower','Mirror','Flooring','Walls','Other']},
+    { title:'Laundry Room', rows:['Water Heater','Flooring','Other']},
+    { title:'General', rows:[
+      'Interior Doors — Functioning Properly','Door Hardware — Functioning Properly',
+      'Shelving — Complete','Mini Blinds — Complete','Cleaning — Satisfactory','Paint Touch-ups — Satisfactory'
+    ]}
+  ];
+
+  // Build sections
+  const container = document.getElementById('sections');
+  SECTIONS.forEach((sec, si)=>{
+    const shell = document.createElement('section');
+    shell.className = 'section card';
+    shell.innerHTML = `
+      <div class="head">${sec.title}</div>
+      <div class="rows">
+        <div class="th r">
+          <div>Item</div>
+          <div>Notes / Findings (wide)</div>
+          <div>Resp. Party</div>
+          <div>Completion Date</div>
+          <div>Init.</div>
+        </div>
+      </div>
+    `;
+    const rows = shell.querySelector('.rows');
+    sec.rows.forEach((label, ri)=>{
+      const r = document.createElement('div'); r.className = 'r';
+      r.innerHTML = `
+        <b>${label}</b>
+        <div class="cell"><textarea data-k="${si}-${ri}-notes" placeholder="Describe issue, location, scope"></textarea></div>
+        <div class="cell"><input data-k="${si}-${ri}-resp" placeholder="Trade / Vendor"></div>
+        <div class="cell"><input data-k="${si}-${ri}-date" type="date"></div>
+        <div class="cell"><input data-k="${si}-${ri}-init" placeholder="__"></div>
+      `;
+      rows.appendChild(r);
+    });
+    container.appendChild(shell);
+  });
+
+  function collect(){
+    const meta = {
+      proj: v('proj'), bldg: v('bldg'), unit: v('unit'),
+      first: v('first'), accept: v('accept'), rep: v('rep')
+    };
+    const data = {};
+    document.querySelectorAll('[data-k]').forEach(el=>data[el.dataset.k]=el.value);
+    return {meta, data};
+  }
+  function applyState(st){
+    if(!st) return;
+    setv('proj', st.meta?.proj||''); setv('bldg', st.meta?.bldg||''); setv('unit', st.meta?.unit||'');
+    setv('first', st.meta?.first||''); setv('accept', st.meta?.accept||''); setv('rep', st.meta?.rep||'');
+    Object.entries(st.data||{}).forEach(([k,v])=>{
+      const el = document.querySelector(`[data-k="${k}"]`); if(el) el.value = v;
+    });
+  }
+  const v=id=>document.getElementById(id).value;
+  const setv=(id,val)=>document.getElementById(id).value=val;
+
+  function saveState(){ localStorage.setItem(KEY, JSON.stringify(collect())); alert('Saved!'); }
+  function loadState(){
+    const raw = localStorage.getItem(KEY);
+    if(!raw){ alert('Nothing saved yet.'); return; }
+    applyState(JSON.parse(raw));
+  }
+  function clearState(){
+    if(!confirm('Clear this form?')) return;
+    localStorage.removeItem(KEY);
+    location.reload();
+  }
+
+  // Auto-save every second
+  setInterval(()=>localStorage.setItem(KEY, JSON.stringify(collect())), 1000);
+
+  // Init
+  applyState(JSON.parse(localStorage.getItem(KEY) || 'null'));
+
+  /* ---------- PDF EXPORT ---------- */
+  async function downloadPDF(){
+    document.body.classList.add('exporting');
+    await new Promise(r=>setTimeout(r, 50));
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({orientation:'p', unit:'pt', format:'letter'});
+    const el = document.getElementById('content');
+
+    const canvas = await html2canvas(el, {scale:2, useCORS:true, windowWidth: el.scrollWidth});
+    const img = canvas.toDataURL('image/png');
+
+    const pdfW = doc.internal.pageSize.getWidth();
+    const pdfH = doc.internal.pageSize.getHeight();
+    const imgW = pdfW;
+    const imgH = canvas.height * (imgW / canvas.width);
+
+    let heightLeft = imgH;
+    let position = 0;
+
+    doc.addImage(img, 'PNG', 0, position, imgW, imgH);
+    heightLeft -= pdfH;
+
+    while (heightLeft > 0) {
+      position = -(imgH - heightLeft);
+      doc.addPage();
+      doc.addImage(img, 'PNG', 0, position, imgW, imgH);
+      heightLeft -= pdfH;
+    }
+
+    const date = (v('accept') || v('first') || new Date().toISOString().slice(0,10));
+    const proj = (v('proj') || 'Project').replace(/[^\w-]+/g,'_');
+    const bldg = (v('bldg') || 'Bldg').replace(/[^\w-]+/g,'_');
+    const unit = (v('unit') || 'Unit').replace(/[^\w-]+/g,'_');
+    doc.save(`Final-Building-Walk—${proj}—${bldg}—${unit}—${date}.pdf`);
+
+    document.body.classList.remove('exporting');
+  }
+</script>
+</body>
+</html>
