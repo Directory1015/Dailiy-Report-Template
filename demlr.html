@@ -2,9 +2,15 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
   <title>DEMLR Monitoring</title>
   <meta name="description" content="DEMLR monitoring form — fill in the blanks and save drafts locally."/>
+  
+  <!-- iOS Specific Meta Tags -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="DEMLR">
+  
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -13,7 +19,20 @@
       --ink:#0f172a; --bg:#ffffff; --card:#ffffff; --muted:#6b7280; --border:#e5e7eb; --ok:#16a34a;
     }
     *{box-sizing:border-box}
-    html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+    html{
+      -webkit-overflow-scrolling:touch;
+      -webkit-text-size-adjust:100%;
+    }
+    html,body{
+      margin:0;
+      padding:0;
+      background:var(--bg);
+      color:var(--ink);
+      font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+    }
+    body{
+      padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    }
     a{color:#0ea5e9;text-decoration:none}
     .wrap{max-width:1100px;margin:0 auto;padding:24px}
 
@@ -21,8 +40,22 @@
     .top{display:flex;align-items:center;gap:14px;max-width:1100px;margin:0 auto;padding:14px 24px}
     .brand{font-weight:800}
     .actions{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
-    button,.btn{border:1px solid var(--border);background:#fff;color:var(--ink);padding:10px 14px;border-radius:10px;cursor:pointer;display:inline-block;text-decoration:none}
+    button,.btn{
+      border:1px solid var(--border);
+      background:#fff;
+      color:var(--ink);
+      padding:10px 14px;
+      border-radius:10px;
+      cursor:pointer;
+      display:inline-block;
+      text-decoration:none;
+      -webkit-tap-highlight-color:transparent;
+      touch-action:manipulation;
+      user-select:none;
+      -webkit-user-select:none;
+    }
     button:hover,.btn:hover{background:#f3f4f6}
+    button:active,.btn:active{transform:scale(0.96)}
     .btn.primary{background:var(--ink);color:#fff;border-color:var(--ink)}
     .btn.ok{background:var(--ok);color:#fff;border-color:var(--ok)}
     .btn.warn{background:#b45309;color:#fff;border-color:#b45309}
@@ -38,56 +71,127 @@
     /* Inputs */
     input[type="text"],input[type="number"],input[type="date"],input[type="datetime-local"],
     input[type="email"],input[type="time"],select,textarea{
-      width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:#fff;color:var(--ink);
+      width:100%;
+      padding:10px 12px;
+      border-radius:10px;
+      border:1px solid var(--border);
+      background:#fff;
+      color:var(--ink);
+      font-size:16px;
+      -webkit-appearance:none;
+      appearance:none;
     }
     textarea{min-height:110px;resize:vertical}
     .checklist{display:grid;gap:8px}
+    .checklist label{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--ink)}
+    .checklist input[type="checkbox"]{width:20px;height:20px;accent-color:var(--ink)}
     .tools{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 0}
 
     /* Tables */
-    table{width:100%;border-collapse:collapse;table-layout:fixed} /* fixed + wrapping = no overlap */
+    table{width:100%;border-collapse:collapse;table-layout:fixed}
     th,td{border:1px solid var(--border);padding:8px;text-align:left;vertical-align:top;overflow-wrap:anywhere;word-break:normal;white-space:normal}
     th{background:#f8fafc}
     .tight td,.tight th{padding:6px}
     .small{font-size:12px;color:var(--muted)}
     .info{background:#f8fafc;border:1px solid var(--border);border-radius:10px;padding:10px}
 
-    /* Scroll wrapper for wide tables (unclipped on print) */
-    .scrollwrap{overflow:auto;margin-top:8px;border-radius:10px}
-    .scrollwrap table{min-width:900px} /* keeps columns readable on small screens */
+    /* Scroll wrapper for wide tables */
+    .scrollwrap{overflow:auto;margin-top:8px;border-radius:10px;-webkit-overflow-scrolling:touch}
+    .scrollwrap table{min-width:900px}
 
-    /* Y/N/NA cells (pure HTML label = clickable) */
+    /* Y/N/NA cells */
     .ynna-cell{padding:0}
     .ynna-cell label.selector{
       display:flex;align-items:center;justify-content:center;
       width:100%;height:100%;cursor:pointer;padding:6px;
+      -webkit-tap-highlight-color:transparent;
     }
-    .ynna-cell input[type="radio"]{width:18px;height:18px;accent-color:currentColor}
+    .ynna-cell input[type="radio"]{width:20px;height:20px;accent-color:currentColor}
 
+    /* Mobile optimizations */
     @media (max-width:900px){
       .row{grid-template-columns:repeat(6,1fr)}
-    }
-    @media (max-width:700px){
-      th,td{padding:6px;font-size:12px}         /* tighten table text on phones */
+      
+      .wrap{
+        padding:16px;
+        padding-bottom:calc(16px + env(safe-area-inset-bottom));
+      }
+      
+      .top{
+        padding:12px 16px;
+        flex-wrap:wrap;
+      }
+      
+      .brand{font-size:18px}
+      
+      .actions{
+        width:100%;
+        margin-left:0;
+        margin-top:8px;
+      }
+      
+      button,.btn{
+        padding:12px 14px;
+        min-height:44px;
+        font-size:14px;
+      }
+      
+      .card{padding:14px;border-radius:14px}
       .card h2{font-size:15px}
-      .scrollwrap table{min-width:700px}
-      input,select,textarea{font-size:14px}
+      
+      input[type="text"],input[type="number"],input[type="date"],input[type="datetime-local"],
+      input[type="email"],input[type="time"],select,textarea{
+        padding:12px;
+        font-size:16px;
+      }
+      
+      .scrollwrap{
+        margin-left:-14px;
+        margin-right:-14px;
+        border-radius:0;
+        padding:0 14px;
+      }
     }
+    
+    @media (max-width:700px){
+      th,td{padding:6px;font-size:12px}
+      .scrollwrap table{min-width:700px}
+      input,select,textarea{font-size:16px}
+    }
+    
     @media (max-width:600px){
       .row{grid-template-columns:repeat(2,1fr)}
       .scrollwrap table{min-width:650px}
+      
+      .actions{
+        display:grid;
+        grid-template-columns:1fr 1fr;
+        gap:8px;
+      }
+      
+      .actions .btn{
+        width:100%;
+      }
+    }
+
+    /* iPhone X and newer with notch */
+    @supports(padding:max(0px)){
+      body{
+        padding-left:max(0px, env(safe-area-inset-left));
+        padding-right:max(0px, env(safe-area-inset-right));
+      }
     }
 
     /* PRINT: unclip, let tables break nicely with repeating headers */
     @media print{
       header,.actions,.tools,.btn{display:none !important}
-      body{background:#fff !important;color:#000 !important}
+      body{background:#fff !important;color:#000 !important;padding:0 !important}
       .card{break-inside:avoid;border:1px solid #000 !important}
-      .scrollwrap{overflow:visible !important}          /* <-- key fix: no clipping */
+      .scrollwrap{overflow:visible !important}
       table{width:100% !important;min-width:auto !important}
-      thead{display:table-header-group}                 /* repeat header each page */
+      thead{display:table-header-group}
       tfoot{display:table-footer-group}
-      tr{page-break-inside:avoid}                       /* don’t split a row */
+      tr{page-break-inside:avoid}
       input,select,textarea{background:#fff !important;color:#000 !important;-webkit-text-fill-color:#000 !important;border:1px solid #000 !important}
       th,td{border-color:#000 !important;color:#000 !important}
       th{background:#fff !important;color:#000 !important}
@@ -160,7 +264,7 @@
       <!-- Part 2 -->
       <div class="card">
         <h2>Part 2 — Stormwater Plans &amp; Controls</h2>
-        <div class="small">For each item, select Y / N / N/A. All “No” items should be referenced and corrected in Part 3A.</div>
+        <div class="small">For each item, select Y / N / N/A. All "No" items should be referenced and corrected in Part 3A.</div>
 
         <!-- 2A -->
         <h3 class="small" style="margin-top:12px">Part 2A: Storm Water Plans and Related Documents</h3>
@@ -367,12 +471,11 @@
     </section>
   </div>
 
-  <!-- JS: radios work via labels; below is save/restore + tables -->
   <script>
   (function(){
     function $(s,r){return (r||document).querySelector(s)}
     function $$(s,r){return Array.from((r||document).querySelectorAll(s))}
-    const STORAGE_KEY='demlrDrafts_v8'; // bump to bust old cache
+    const STORAGE_KEY='demlrDrafts_v8';
     let currentId=null;
     const uid=()=>Math.random().toString(36).slice(2)+Date.now().toString(36);
     const getDrafts=()=>{try{return JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]')}catch(e){return[]}}
@@ -531,10 +634,19 @@
       seed();
       renderHistory();
     });
+    
+    // Prevent double-tap zoom on iOS
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', function(event) {
+      const now = Date.now();
+      if (now - lastTouchEnd <= 300) {
+        event.preventDefault();
+      }
+      lastTouchEnd = now;
+    }, false);
   })();
   </script>
 </body>
 </html>
-
 
 
