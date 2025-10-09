@@ -115,20 +115,24 @@
     }
 
     /* ===== Mobile compaction (phones) ===== */
-    @media (max-width: 600px){
-      header { box-shadow: 0 1px 6px rgba(0,0,0,.06); }
-      .top { padding: 8px 12px; gap: 10px; }
-      .logo { width: 28px; height: 28px; border-radius: 8px; font-size: 12px; }
-      .brand-name{ font-size: 10px; }
-      h1 { font-size: 14px; }
+@media (max-width: 600px){
+  /* ...keep everything else in here as-is... */
 
-      .actions { gap: 6px; }
-      button, .btn { 
-        padding: 6px 10px; 
-        font-size: 13px; 
-        border-radius: 8px; 
-        line-height: 1.15;
-      }
+  /* Prevent iPhone focus-zoom: font-size must be >= 16px */
+  input, select, textarea {
+    padding: 8px 10px;
+    font-size: 16px;       /* was 14px */
+    line-height: 1.25;
+    border-radius: 8px;
+  }
+
+  /* Be explicit for these too */
+  input[type="date"],
+  input[type="time"],
+  input[type="number"],
+  input[type="email"],
+  input[type="tel"] { font-size: 16px; }
+}
 
       .wrap { padding: 12px; }
       .grid { gap: 12px; }
