@@ -2,189 +2,561 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Daily Reports</title>
-  <meta name="description" content="Lightweight daily construction report web app. Works on GitHub Pages. Saves to localStorage. Export to JSON or Print to PDF." />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#1e40af">
+  <title>Daily Reports - Comet Builders</title>
+  <meta name="description" content="Professional construction daily report system with auto-save and photo compression." />
   <style>
     :root{
-      --ink:#0e1223;
-      --bg:#ffffff;
+      --ink:#0a0f1e;
+      --bg:#f8fafc;
       --card:#ffffff;
-      --muted:#4b5563;
-      --brand:#1f5eff;
-      --accent:#22c55e;
+      --muted:#64748b;
+      --brand:#1e40af;
+      --brand-light:#3b82f6;
+      --accent:#10b981;
       --warn:#f59e0b;
       --danger:#ef4444;
-      --border:#cbd5e1;
-      --border-dark:#94a3b8;
-      --head:#f8fafc;
+      --border:#e2e8f0;
+      --border-dark:#cbd5e1;
+      --head:#f1f5f9;
+      --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -2px rgba(0,0,0,0.04);
     }
-    *{box-sizing:border-box}
+    *{box-sizing:border-box;margin:0;padding:0}
     html,body{
-      margin:0;padding:0;
-      font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+      font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;
       background:var(--bg);
       color:var(--ink);
+      line-height:1.5;
     }
-    a{color:var(--brand)}
-    .wrap{max-width:1100px;margin:0 auto;padding:24px}
+    a{color:var(--brand);text-decoration:none}
+    .wrap{max-width:1200px;margin:0 auto;padding:24px}
 
-    /* Header: sticky on ALL viewports */
+    /* Header - Fixed & Professional */
     header{
-      position:sticky; top:0; z-index:5;
+      position:sticky; top:0; z-index:100;
       background:#fff;
       border-bottom:1px solid var(--border);
-      box-shadow:0 2px 10px rgba(0,0,0,.04);
+      box-shadow:var(--shadow);
+    }
+    .top{
+      display:flex;align-items:center;gap:16px;
+      max-width:1200px;margin:0 auto;padding:14px 24px;
+      flex-wrap:wrap;
+    }
+    .brand{display:flex;align-items:center;gap:12px}
+    .logo{
+      width:48px;height:48px;border-radius:14px;
+      background:linear-gradient(135deg,#1e40af,#3b82f6);
+      display:grid;place-items:center;
+      font-weight:800;color:#fff;font-size:18px;
+      box-shadow:var(--shadow);
+    }
+    .titles{display:flex;flex-direction:column;line-height:1.2}
+    .brand-name{
+      font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+      color:var(--muted);font-weight:600;
+    }
+    h1{font-size:20px;font-weight:700;color:var(--ink)}
+    .actions{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    
+    /* Auto-save indicator */
+    .save-status{
+      display:flex;align-items:center;gap:6px;
+      padding:6px 12px;border-radius:8px;
+      font-size:12px;font-weight:500;
+      background:#f1f5f9;color:var(--muted);
+      transition:all 0.3s ease;
+    }
+    .save-status.saving{background:#fef3c7;color:#92400e}
+    .save-status.saved{background:#d1fae5;color:#065f46}
+    .save-status .dot{
+      width:6px;height:6px;border-radius:50%;
+      background:currentColor;
     }
 
-    .top{display:flex;align-items:center;gap:14px;max-width:1100px;margin:0 auto;padding:14px 24px}
-    .brand{display:flex;align-items:center;gap:10px}
-    .logo{width:42px;height:42px;border-radius:12px;background:#eef2ff;border:1px solid var(--border);display:grid;place-items:center;font-weight:800;color:#1e3a8a}
-    .titles{display:flex;flex-direction:column;line-height:1.1}
-    .brand-name{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#334155}
-    h1{font-size:18px;margin:0}
-    .actions{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+    /* Buttons - Modern & Clean */
     button,.btn{
       border:1px solid var(--border-dark);
-      background:#f3f4f6;
+      background:#fff;
       color:var(--ink);
-      padding:10px 14px;border-radius:10px;cursor:pointer;text-decoration:none;display:inline-block
+      padding:10px 16px;
+      border-radius:10px;
+      cursor:pointer;
+      font-size:14px;
+      font-weight:500;
+      transition:all 0.2s ease;
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      text-decoration:none;
     }
-    button:hover,.btn:hover{background:#e5e7eb}
+    button:hover,.btn:hover{
+      background:#f8fafc;
+      box-shadow:var(--shadow);
+      transform:translateY(-1px);
+    }
     .btn.primary{
-      background:linear-gradient(180deg,#3b82f6,#2563eb);
-      border-color:#1d4ed8; color:#fff
+      background:linear-gradient(135deg,#2563eb,#1e40af);
+      border-color:#1e40af;color:#fff;
+    }
+    .btn.primary:hover{
+      background:linear-gradient(135deg,#1e40af,#1e3a8a);
     }
     .btn.success{
-      background:linear-gradient(180deg,#2e7d32,#1e5c22);
-      border-color:#2e7d32; color:#fff
+      background:linear-gradient(135deg,#10b981,#059669);
+      border-color:#059669;color:#fff;
+    }
+    .btn.success:hover{
+      background:linear-gradient(135deg,#059669,#047857);
     }
     .btn.warn{
-      background:linear-gradient(180deg,#b45309,#8a3f07);
-      border-color:#b45309; color:#fff
+      background:linear-gradient(135deg,#f59e0b,#d97706);
+      border-color:#d97706;color:#fff;
     }
-    .btn.ghost{background:transparent;border-color:var(--border-dark)}
+    .btn.ghost{background:transparent;border-color:var(--border)}
+    .btn.ghost:hover{background:#f8fafc}
+    .btn.small{padding:6px 12px;font-size:13px}
 
-    .grid{display:grid;gap:16px;grid-template-columns:repeat(12,1fr)}
+    /* Grid & Cards */
+    .grid{display:grid;gap:20px;grid-template-columns:repeat(12,1fr)}
     .card{
       grid-column:span 12;
       background:var(--card);
       border:1px solid var(--border);
-      border-radius:16px;padding:16px
+      border-radius:16px;
+      padding:20px;
+      box-shadow:var(--shadow);
+      transition:box-shadow 0.3s ease;
     }
-    .card h2{font-size:16px;margin:0 0 12px 0;color:#0f172a}
+    .card:hover{box-shadow:var(--shadow-lg)}
+    .card h2{
+      font-size:18px;
+      margin:0 0 16px 0;
+      color:var(--ink);
+      font-weight:700;
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+    .card h2::before{
+      content:'';width:4px;height:20px;
+      background:linear-gradient(180deg,var(--brand),var(--brand-light));
+      border-radius:2px;
+    }
 
-    .row{display:grid;grid-template-columns:repeat(12,1fr);gap:12px;margin-bottom:10px}
-    label{font-size:12px;color:var(--muted)}
+    /* Form Elements */
+    .row{display:grid;grid-template-columns:repeat(12,1fr);gap:14px;margin-bottom:12px}
+    label{
+      display:block;
+      font-size:13px;
+      color:var(--muted);
+      font-weight:600;
+      margin-bottom:6px;
+      letter-spacing:0.01em;
+    }
     input,select,textarea{
-      width:100%;padding:10px 12px;border-radius:10px;
+      width:100%;
+      padding:11px 14px;
+      border-radius:10px;
       border:1px solid var(--border-dark);
-      background:#fff;color:var(--ink)
+      background:#fff;
+      color:var(--ink);
+      font-size:14px;
+      transition:all 0.2s ease;
+      font-family:inherit;
     }
-    textarea{min-height:110px;resize:vertical}
+    input:focus,select:focus,textarea:focus{
+      outline:none;
+      border-color:var(--brand);
+      box-shadow:0 0 0 3px rgba(30,64,175,0.1);
+    }
+    textarea{min-height:100px;resize:vertical;line-height:1.5}
+    input[type="date"],input[type="time"]{cursor:pointer}
 
-    table{width:100%;border-collapse:collapse}
-    th,td{border:1px solid var(--border-dark);padding:8px;text-align:left;vertical-align:top}
-    th{background:var(--head);color:#0f172a}
+    /* Tables - Enhanced */
+    .table-wrap{
+      overflow-x:auto;
+      margin-top:12px;
+      border-radius:10px;
+      border:1px solid var(--border);
+      -webkit-overflow-scrolling:touch;
+    }
+    table{
+      width:100%;
+      border-collapse:collapse;
+      background:#fff;
+      min-width:800px;
+    }
+    th,td{padding:10px;text-align:left;vertical-align:top;white-space:nowrap}
+    th{
+      background:var(--head);
+      color:var(--ink);
+      font-weight:600;
+      font-size:13px;
+      text-transform:uppercase;
+      letter-spacing:0.03em;
+      border-bottom:2px solid var(--border-dark);
+    }
+    td{border-bottom:1px solid var(--border)}
+    tr:last-child td{border-bottom:none}
+    tr:hover{background:#f8fafc}
+    td input,td textarea,td select{
+      border:1px solid var(--border);
+      padding:8px 10px;
+      font-size:14px;
+      background:#fff;
+    }
+    td textarea.grow{
+      min-height:38px;
+      min-width:200px;
+      resize:vertical;
+      white-space:normal;
+      line-height:1.4;
+    }
+    td input[type="time"]{min-width:100px}
+    td input[type="number"]{min-width:70px}
+    
+    /* Specific column widths for better mobile */
+    #laborTable th:nth-child(1),#laborTable td:nth-child(1){min-width:150px}
+    #laborTable th:nth-child(7),#laborTable td:nth-child(7){min-width:220px}
+    #deliveryTable th:nth-child(5),#deliveryTable td:nth-child(5){min-width:220px}
+    #inspTable th:nth-child(5),#inspTable td:nth-child(5){min-width:220px}
+    #equipTable th:nth-child(5),#equipTable td:nth-child(5){min-width:220px}
 
-    .tools{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 0}
-    .pill{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border:1px dashed var(--border-dark);border-radius:999px;color:#0f172a;font-size:12px;background:#fff}
-    .muted{color:var(--muted);font-size:12px}
+    /* Tools & Pills */
+    .tools{
+      display:flex;gap:8px;flex-wrap:wrap;
+      margin-bottom:12px;padding-bottom:12px;
+      border-bottom:1px solid var(--border);
+    }
+    .pill{
+      display:inline-flex;align-items:center;gap:8px;
+      padding:6px 12px;
+      border:1px solid var(--border);
+      border-radius:999px;
+      color:var(--ink);
+      font-size:12px;
+      background:#f8fafc;
+      font-weight:500;
+    }
+    .muted{color:var(--muted);font-size:13px}
     .danger{color:var(--danger)}
 
-    .gallery{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
-    .gallery img{width:100%;height:90px;object-fit:cover;border-radius:10px;border:1px solid var(--border-dark);background:#fff}
-
-    .kpi{display:flex;gap:16px;flex-wrap:wrap}
-    .kpi .box{
-      flex:1 1 160px;background:#fff;border:1px solid var(--border-dark);border-radius:12px;padding:12px
+    /* Gallery - Improved */
+    .gallery{
+      display:grid;
+      grid-template-columns:repeat(auto-fill,minmax(140px,1fr));
+      gap:12px;
+      margin-top:12px;
     }
-    .box b{font-size:20px}
+    .photo-item{
+      position:relative;
+      border-radius:12px;
+      overflow:hidden;
+      background:#f8fafc;
+      border:1px solid var(--border);
+      aspect-ratio:4/3;
+    }
+    .photo-item img{
+      width:100%;height:100%;
+      object-fit:cover;
+      transition:transform 0.3s ease;
+    }
+    .photo-item:hover img{transform:scale(1.05)}
+    .photo-item .remove-photo{
+      position:absolute;top:6px;right:6px;
+      background:rgba(239,68,68,0.9);
+      color:#fff;
+      border:none;
+      width:28px;height:28px;
+      border-radius:50%;
+      cursor:pointer;
+      font-size:16px;
+      display:flex;align-items:center;justify-content:center;
+      opacity:0;
+      transition:opacity 0.2s ease;
+    }
+    .photo-item:hover .remove-photo{opacity:1}
 
-    /* Auto-growing Notes cells */
-    td textarea.grow{min-height:42px;line-height:1.3;resize:vertical;overflow:hidden}
+    /* KPI Cards */
+    .kpi{display:flex;gap:16px;flex-wrap:wrap;margin-top:16px}
+    .kpi .box{
+      flex:1 1 160px;
+      background:linear-gradient(135deg,#f8fafc,#fff);
+      border:1px solid var(--border);
+      border-radius:12px;
+      padding:16px;
+      box-shadow:var(--shadow);
+    }
+    .kpi .box label{
+      font-size:12px;
+      color:var(--muted);
+      margin-bottom:8px;
+      text-transform:uppercase;
+      letter-spacing:0.05em;
+    }
+    .box b{
+      font-size:28px;
+      color:var(--brand);
+      font-weight:700;
+      display:block;
+    }
 
-    /* Responsive (existing) */
+    /* Progress Bar */
+    .progress-bar{
+      height:4px;
+      background:var(--border);
+      border-radius:2px;
+      overflow:hidden;
+      margin:16px 0;
+    }
+    .progress-fill{
+      height:100%;
+      background:linear-gradient(90deg,var(--brand),var(--accent));
+      transition:width 0.3s ease;
+    }
+
+    /* History Items */
+    .history-item{
+      display:flex;gap:12px;align-items:center;
+      margin:10px 0;padding:14px;
+      border:1px solid var(--border);
+      border-radius:12px;
+      background:#fff;
+      transition:all 0.2s ease;
+    }
+    .history-item:hover{
+      box-shadow:var(--shadow);
+      border-color:var(--brand-light);
+    }
+    .history-item .info{flex:1 1 auto}
+    .history-item .title{font-weight:600;color:var(--ink);margin-bottom:2px}
+    .history-item .meta{font-size:12px;color:var(--muted)}
+
+    /* Toast Notifications */
+    .toast{
+      position:fixed;bottom:24px;right:24px;
+      padding:14px 18px;
+      background:#0f172a;
+      color:#fff;
+      border-radius:10px;
+      box-shadow:var(--shadow-lg);
+      z-index:1000;
+      animation:slideUp 0.3s ease;
+      display:flex;align-items:center;gap:10px;
+      max-width:400px;
+    }
+    .toast.success{background:#059669}
+    .toast.error{background:#dc2626}
+    @keyframes slideUp{
+      from{transform:translateY(100px);opacity:0}
+      to{transform:translateY(0);opacity:1}
+    }
+
+    /* Responsive */
     @media (max-width:900px){
       .row{grid-template-columns:repeat(6,1fr)}
       .gallery{grid-template-columns:repeat(3,1fr)}
+      table{min-width:900px}
     }
     @media (max-width:600px){
-      .row{grid-template-columns:repeat(2,1fr)}
-      .gallery{grid-template-columns:repeat(2,1fr)}
-    }
-
-    /* ===== Mobile compaction (phones) ===== */
-    @media (max-width: 600px){
-      header { box-shadow: 0 1px 6px rgba(0,0,0,.06); }
-      .top { padding: 8px 12px; gap: 10px; }
-      .logo { width: 28px; height: 28px; border-radius: 8px; font-size: 12px; }
-      .brand-name{ font-size: 10px; }
-      h1 { font-size: 14px; }
-
-      .actions { gap: 6px; }
-      button, .btn { 
-        padding: 6px 10px; 
-        font-size: 13px; 
-        border-radius: 8px; 
-        line-height: 1.15;
+      .wrap{padding:12px}
+      .top{padding:10px 12px;gap:8px;flex-wrap:wrap}
+      .logo{width:36px;height:36px;font-size:14px;border-radius:10px}
+      .brand-name{font-size:10px}
+      h1{font-size:16px}
+      .brand{margin-bottom:4px}
+      .actions{
+        gap:6px;
+        width:100%;
+        margin-left:0;
+        justify-content:flex-start;
       }
-
-      .wrap { padding: 12px; }
-      .grid { gap: 12px; }
-      .card { padding: 12px; border-radius: 12px; }
-      .card h2 { font-size: 15px; margin-bottom: 10px; }
-
-      label { font-size: 11px; }
-      input, select, textarea {
-        padding: 8px 10px;
-        font-size: 14px;
-        border-radius: 8px;
+      .save-status{
+        font-size:11px;
+        padding:5px 10px;
+        order:-1;
+        width:100%;
       }
-      textarea { min-height: 90px; }
-      td textarea.grow { min-height: 36px; }
-
-      th, td { padding: 6px; font-size: 13px; }
-      th { white-space: nowrap; }
+      button,.btn{
+        padding:7px 11px;
+        font-size:13px;
+        border-radius:8px;
+        flex:0 0 auto;
+      }
+      .card{padding:14px;border-radius:12px}
+      .card h2{font-size:16px;margin-bottom:12px}
+      .row{grid-template-columns:1fr;gap:10px}
+      input,select,textarea{padding:10px 12px;font-size:15px}
       
-      .kpi { gap: 12px; }
-      .kpi .box { padding: 8px; border-radius: 10px; }
-      .box b { font-size: 18px; }
-
-      .gallery { grid-template-columns: repeat(2, 1fr); gap: 6px; }
-      .gallery img { height: 70px; border-radius: 8px; }
+      /* Better table mobile handling */
+      .table-wrap{
+        border-radius:8px;
+        margin-left:-14px;
+        margin-right:-14px;
+        border-left:none;
+        border-right:none;
+      }
+      table{min-width:1000px;font-size:14px}
+      th,td{padding:8px;font-size:13px}
+      td input,td textarea,td select{font-size:14px;padding:8px}
+      td textarea.grow{min-width:250px;line-height:1.5}
+      
+      .gallery{grid-template-columns:repeat(2,1fr);gap:10px}
+      .kpi{gap:10px}
+      .kpi .box{padding:12px;flex:1 1 140px}
+      .box b{font-size:24px}
+      .toast{bottom:16px;right:16px;left:16px;max-width:none}
+      .tools{flex-wrap:wrap;gap:6px}
+      .muted{font-size:12px}
     }
 
-    /* ===== Small tablets (optional, slightly tighter) ===== */
-    @media (min-width: 601px) and (max-width: 900px){
-      .top { padding: 10px 16px; }
-      .logo { width: 34px; height: 34px; }
-      h1 { font-size: 16px; }
-      button, .btn { padding: 8px 12px; font-size: 14px; }
-      .wrap { padding: 18px; }
-      .card { padding: 14px; }
-      th, td { padding: 7px; }
-    }
-
-    /* Print */
+    /* Print Styles */
     @media print{
-      header,.actions,.tools,.pill,.btn{display:none !important}
-      body{background:#fff !important;color:#000 !important}
-      .card{break-inside:avoid;background:#fff !important;border:1px solid #000 !important}
-      input,select,textarea{background:#fff !important;color:#000 !important;-webkit-text-fill-color:#000 !important;border:1px solid #000 !important}
-      th,td{border-color:#000 !important;color:#000 !important}
-      th{background:#fff !important;color:#000 !important}
-      .kpi .box{ background:#fff !important; color:#000 !important; border:2px solid #000 !important; }
-      .kpi .box label, .kpi .box b{ color:#000 !important; }
+      @page{
+        size:letter;
+        margin:0.5in;
+      }
+      header,.actions,.tools,.btn,.save-status{display:none !important}
+      body{
+        background:#fff !important;
+        color:#000 !important;
+        -webkit-print-color-adjust:exact;
+        print-color-adjust:exact;
+      }
+      .wrap{padding:0;max-width:100%}
+      .card{
+        break-inside:avoid;
+        background:#fff !important;
+        border:1px solid #000 !important;
+        box-shadow:none !important;
+        page-break-inside:avoid;
+        margin-bottom:16px;
+        padding:16px !important;
+      }
+      .card h2{page-break-after:avoid;font-size:14px !important}
+      input,select,textarea{
+        background:#fff !important;
+        color:#000 !important;
+        border:1px solid #000 !important;
+        -webkit-text-fill-color:#000 !important;
+        font-size:11px !important;
+        padding:4px 6px !important;
+      }
+      textarea{
+        min-height:auto !important;
+        height:auto !important;
+        overflow:visible !important;
+      }
+      
+      /* Table print optimization */
+      .table-wrap{
+        overflow:visible !important;
+        border:none !important;
+        margin:0 !important;
+      }
+      table{
+        width:100% !important;
+        min-width:0 !important;
+        font-size:10px !important;
+        page-break-inside:auto;
+      }
+      thead{display:table-header-group}
+      tbody{display:table-row-group}
+      tr{page-break-inside:avoid;page-break-after:auto}
+      th,td{
+        border:1px solid #000 !important;
+        color:#000 !important;
+        padding:4px !important;
+        font-size:10px !important;
+        white-space:normal !important;
+        word-wrap:break-word;
+      }
+      th{
+        background:#f0f0f0 !important;
+        color:#000 !important;
+        font-weight:bold !important;
+        -webkit-print-color-adjust:exact;
+        print-color-adjust:exact;
+      }
+      td input,td textarea,td select{
+        font-size:10px !important;
+        padding:2px 4px !important;
+        width:100%;
+      }
+      td textarea.grow{
+        min-width:0 !important;
+        width:100% !important;
+      }
+      
+      /* Adjust column widths for print */
+      #laborTable th:nth-child(1),#laborTable td:nth-child(1){width:15%}
+      #laborTable th:nth-child(2),#laborTable td:nth-child(2){width:10%}
+      #laborTable th:nth-child(3),#laborTable td:nth-child(3){width:12%}
+      #laborTable th:nth-child(4),#laborTable td:nth-child(4){width:6%}
+      #laborTable th:nth-child(5),#laborTable td:nth-child(5){width:8%}
+      #laborTable th:nth-child(6),#laborTable td:nth-child(6){width:8%}
+      #laborTable th:nth-child(7),#laborTable td:nth-child(7){width:35%}
+      #laborTable th:nth-child(8),#laborTable td:nth-child(8){width:6%}
+      
+      #deliveryTable th:nth-child(1),#deliveryTable td:nth-child(1){width:8%}
+      #deliveryTable th:nth-child(2),#deliveryTable td:nth-child(2){width:15%}
+      #deliveryTable th:nth-child(3),#deliveryTable td:nth-child(3){width:20%}
+      #deliveryTable th:nth-child(4),#deliveryTable td:nth-child(4){width:12%}
+      #deliveryTable th:nth-child(5),#deliveryTable td:nth-child(5){width:25%}
+      #deliveryTable th:nth-child(6),#deliveryTable td:nth-child(6){width:14%}
+      
+      #inspTable th:nth-child(1),#inspTable td:nth-child(1){width:18%}
+      #inspTable th:nth-child(2),#inspTable td:nth-child(2){width:15%}
+      #inspTable th:nth-child(3),#inspTable td:nth-child(3){width:15%}
+      #inspTable th:nth-child(4),#inspTable td:nth-child(4){width:12%}
+      #inspTable th:nth-child(5),#inspTable td:nth-child(5){width:34%}
+      
+      #equipTable th:nth-child(1),#equipTable td:nth-child(1){width:18%}
+      #equipTable th:nth-child(2),#equipTable td:nth-child(2){width:18%}
+      #equipTable th:nth-child(3),#equipTable td:nth-child(3){width:8%}
+      #equipTable th:nth-child(4),#equipTable td:nth-child(4){width:15%}
+      #equipTable th:nth-child(5),#equipTable td:nth-child(5){width:35%}
+      
+      .kpi{display:flex !important;gap:8px;page-break-inside:avoid}
+      .kpi .box{
+        background:#fff !important;
+        color:#000 !important;
+        border:2px solid #000 !important;
+        flex:1;
+        padding:8px !important;
+        -webkit-print-color-adjust:exact;
+        print-color-adjust:exact;
+      }
+      .kpi .box label,.kpi .box b{color:#000 !important;font-size:11px !important}
+      .kpi .box b{font-size:16px !important}
+      
+      .gallery{
+        grid-template-columns:repeat(4,1fr) !important;
+        gap:8px;
+        page-break-inside:avoid;
+      }
+      .photo-item{break-inside:avoid}
+      .photo-item .remove-photo{display:none !important}
+      .photo-item img{max-height:120px}
+      
+      .row{
+        grid-template-columns:repeat(12,1fr) !important;
+        gap:8px !important;
+        page-break-inside:avoid;
+      }
+      label{font-size:10px !important;margin-bottom:2px !important}
     }
   </style>
 </head>
 <body>
 
-  <!-- Anti-stale updater (plain ES5; bump version when you deploy) -->
+  <!-- Version Check & Cache Clear -->
   <script>
     (function(){
-      var APP_VERSION = '2025-10-09-04'; // CHANGE when you deploy
+      var APP_VERSION = '2025-10-09-PRO-v2';
       try {
         var stored = localStorage.getItem('app_version');
         if (stored !== APP_VERSION) {
@@ -206,30 +578,30 @@
             localStorage.setItem('app_version', APP_VERSION);
           }
         }
-      } catch (e) { /* fail open */ }
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.addEventListener('controllerchange', function(){ location.reload(); });
-      }
+      } catch (e) {}
     })();
   </script>
 
   <header>
     <div class="top">
       <div class="brand">
-        <div class="logo">DR</div>
+        <div class="logo">CB</div>
         <div class="titles">
-          <div class="brand-name">Comet Builders</div>
+          <div class="brand-name">Comet Builders LLC</div>
           <h1>Daily Reports</h1>
         </div>
       </div>
       <div class="actions">
-        <a class="btn ghost" href="index.html">Home</a>
-        <button class="btn primary" id="saveBtn">Save Draft</button>
-        <button class="btn" id="newBtn">New</button>
-        <button class="btn" id="exportBtn">Export JSON</button>
-        <label class="btn ghost" for="importFile">Import JSON</label>
+        <div class="save-status" id="saveStatus">
+          <span class="dot"></span>
+          <span id="saveText">Ready</span>
+        </div>
+        <button class="btn ghost" id="copyPrevBtn" title="Copy Yesterday">📋 Copy Prev</button>
+        <button class="btn" id="newBtn">🆕 New</button>
+        <button class="btn" id="exportBtn">💾 Export</button>
+        <label class="btn ghost" for="importFile">📥 Import</label>
         <input type="file" id="importFile" accept="application/json" hidden>
-        <button class="btn success" id="printBtn">Print / PDF</button>
+        <button class="btn success" id="printBtn">🖨️ Print</button>
       </div>
     </div>
   </header>
@@ -238,44 +610,44 @@
     <section class="grid">
       <!-- Report Meta -->
       <div class="card">
-        <h2>Report Info</h2>
+        <h2>Report Information</h2>
         <div class="row">
           <div style="grid-column:span 3">
-            <label for="date">Date</label>
-            <input type="date" id="date">
+            <label for="date">Date *</label>
+            <input type="date" id="date" required>
           </div>
           <div style="grid-column:span 5">
-            <label for="project">Project</label>
-            <select id="project">
+            <label for="project">Project *</label>
+            <select id="project" required>
               <option value="">Select project…</option>
               <option>Comet Sneads Ferry Apartments</option>
-              <option>Comet Pittsboro</option>
+              <option>Comet Pittsboro Apartments</option>
               <option>Comet Raleigh</option>
               <option>Comet Greensboro</option>
-              <option>Custom…</option>
+              <option value="custom">Custom…</option>
             </select>
           </div>
           <div style="grid-column:span 4">
-            <label for="customProject">Custom Project (if needed)</label>
-            <input id="customProject" placeholder="Enter custom project name" />
+            <label for="customProject">Custom Project Name</label>
+            <input id="customProject" placeholder="Enter if Custom selected" />
           </div>
         </div>
         <div class="row">
           <div style="grid-column:span 3">
-            <label for="weather">Weather (summary)</label>
-            <input id="weather" placeholder="e.g., 78°F, partly cloudy, 5 mph SW" />
+            <label for="weather">Weather Summary</label>
+            <input id="weather" placeholder="78°F, partly cloudy" />
           </div>
           <div style="grid-column:span 3">
-            <label for="tempRange">Temp Range</label>
-            <input id="tempRange" placeholder="e.g., 70–84°F" />
+            <label for="tempRange">Temperature Range</label>
+            <input id="tempRange" placeholder="65–82°F" />
           </div>
           <div style="grid-column:span 3">
             <label for="precip">Precipitation</label>
-            <input id="precip" placeholder="e.g., 0.1 in" />
+            <input id="precip" placeholder="0.0 in" />
           </div>
           <div style="grid-column:span 3">
             <label for="wind">Wind</label>
-            <input id="wind" placeholder="e.g., 8 mph SW" />
+            <input id="wind" placeholder="5 mph SW" />
           </div>
         </div>
         <div class="kpi">
@@ -290,21 +662,22 @@
       <div class="card">
         <h2>Manpower & Vendors</h2>
         <div class="tools">
-          <button class="btn" id="addLabor">+ Add Row</button>
-          <button class="btn ghost" id="clearLabor">Clear</button>
+          <button class="btn small" id="addLabor">➕ Add Row</button>
+          <button class="btn ghost small" id="clearLabor">🗑️ Clear</button>
+          <span class="muted">Track all subcontractors and crews on site</span>
         </div>
-        <div style="overflow:auto;margin-top:8px">
+        <div class="table-wrap">
           <table id="laborTable">
             <thead>
               <tr>
                 <th>Company / Trade</th>
-                <th>Building</th>
+                <th>Building/Area</th>
                 <th>Supervisor</th>
                 <th># Crew</th>
                 <th>Time On</th>
                 <th>Time Off</th>
                 <th>Notes</th>
-                <th>—</th>
+                <th style="width:50px">—</th>
               </tr>
             </thead>
             <tbody></tbody>
@@ -314,23 +687,23 @@
 
       <!-- Work Performed -->
       <div class="card">
-        <h2>Work Performed</h2>
+        <h2>Work Performed Today</h2>
         <div class="row">
           <div style="grid-column:span 12">
-            <label for="workPerformed">Summary (by area/trade)</label>
-            <textarea id="workPerformed" placeholder="Example: Bldg 1 – framing 2nd floor; Bldg 2 – MEP rough-ins; Site – irrigation mainline S of Bldg 3; etc."></textarea>
+            <label for="workPerformed">Summary by Area/Trade</label>
+            <textarea id="workPerformed" placeholder="Example: Bldg 1 – Framing 2nd floor east wing; Bldg 2 – MEP rough-ins in units 201-210; Site – Installed irrigation mainline south of Bldg 3"></textarea>
           </div>
         </div>
       </div>
 
       <!-- Deliveries -->
       <div class="card">
-        <h2>Deliveries</h2>
+        <h2>Material Deliveries</h2>
         <div class="tools">
-          <button class="btn" id="addDelivery">+ Add Delivery</button>
-          <button class="btn ghost" id="clearDelivery">Clear</button>
+          <button class="btn small" id="addDelivery">➕ Add Delivery</button>
+          <button class="btn ghost small" id="clearDelivery">🗑️ Clear</button>
         </div>
-        <div style="overflow:auto;margin-top:8px">
+        <div class="table-wrap">
           <table id="deliveryTable">
             <thead>
               <tr>
@@ -340,7 +713,7 @@
                 <th>For Area</th>
                 <th>Notes</th>
                 <th>Received By</th>
-                <th>—</th>
+                <th style="width:50px">—</th>
               </tr>
             </thead>
             <tbody></tbody>
@@ -350,12 +723,12 @@
 
       <!-- Inspections & Tests -->
       <div class="card">
-        <h2>Inspections & Tests</h2>
+        <h2>Inspections & Testing</h2>
         <div class="tools">
-          <button class="btn" id="addInsp">+ Add Item</button>
-          <button class="btn ghost" id="clearInsp">Clear</button>
+          <button class="btn small" id="addInsp">➕ Add Item</button>
+          <button class="btn ghost small" id="clearInsp">🗑️ Clear</button>
         </div>
-        <div style="overflow:auto;margin-top:8px">
+        <div class="table-wrap">
           <table id="inspTable">
             <thead>
               <tr>
@@ -364,7 +737,32 @@
                 <th>Building/Area</th>
                 <th>Status</th>
                 <th>Notes</th>
-                <th>—</th>
+                <th style="width:50px">—</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Equipment On Site -->
+      <div class="card">
+        <h2>Equipment On-Site</h2>
+        <div class="tools">
+          <button class="btn small" id="addEquip">➕ Add Equipment</button>
+          <button class="btn ghost small" id="clearEquip">🗑️ Clear</button>
+          <span class="muted">Track all equipment to prevent loss/damage</span>
+        </div>
+        <div class="table-wrap">
+          <table id="equipTable">
+            <thead>
+              <tr>
+                <th>Type/Model</th>
+                <th>Owner/Subcontractor</th>
+                <th>Qty</th>
+                <th>Location</th>
+                <th>Condition/Notes</th>
+                <th style="width:50px">—</th>
               </tr>
             </thead>
             <tbody></tbody>
@@ -374,80 +772,56 @@
 
       <!-- Safety / Incidents -->
       <div class="card">
-        <h2>Safety</h2>
+        <h2>Safety & Incidents</h2>
         <div class="row">
           <div style="grid-column:span 6">
-            <label for="safetyObservations">Observations / Toolbox Talks</label>
-            <textarea id="safetyObservations" placeholder="PPE compliance, tailgate topics, near-miss notes, etc."></textarea>
+            <label for="safetyObservations">Safety Observations / Toolbox Talks</label>
+            <textarea id="safetyObservations" placeholder="PPE compliance checks, toolbox talk topics, safety concerns addressed, near-miss events"></textarea>
           </div>
           <div style="grid-column:span 6">
-            <label for="incidents">Incidents</label>
-            <textarea id="incidents" placeholder="Describe any incidents. If none, write N/A."></textarea>
+            <label for="incidents">Incidents / Accidents</label>
+            <textarea id="incidents" placeholder="Document any incidents, injuries, or property damage. Write 'N/A' if none occurred."></textarea>
           </div>
         </div>
       </div>
 
       <!-- Delays / Constraints -->
       <div class="card">
-        <h2>Delays & Constraints</h2>
+        <h2>Delays, Constraints & Issues</h2>
         <div class="row">
           <div style="grid-column:span 12">
-            <label for="delays">Delays / Constraints / RFI Needs</label>
-            <textarea id="delays" placeholder="Inspections pending, utility conflicts, weather holds, approvals needed, etc."></textarea>
+            <label for="delays">Today's Delays / Constraints / RFI Needs</label>
+            <textarea id="delays" placeholder="Pending inspections, utility conflicts, weather delays, material shortages, approvals needed, change order items, etc."></textarea>
           </div>
-        </div>
-      </div>
-
-      <!-- Equipment On Site -->
-      <div class="card">
-        <h2>Equipment On-Site</h2>
-        <div class="tools">
-          <button class="btn" id="addEquip">+ Add Equipment</button>
-          <button class="btn ghost" id="clearEquip">Clear</button>
-        </div>
-        <div style="overflow:auto;margin-top:8px">
-          <table id="equipTable">
-            <thead>
-              <tr>
-                <th>Type</th>
-                <th>Owner</th>
-                <th>Qty</th>
-                <th>Location</th>
-                <th>Notes</th>
-                <th>—</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
         </div>
       </div>
 
       <!-- Photos -->
       <div class="card">
-        <h2>Photos</h2>
+        <h2>Site Photos</h2>
         <div class="tools">
-          <label class="btn" for="photoInput">+ Add Photos</label>
+          <label class="btn small" for="photoInput">📷 Add Photos</label>
           <input type="file" id="photoInput" accept="image/*" multiple hidden>
-          <button class="btn ghost" id="clearPhotos">Clear</button>
-          <span class="muted">(Images save in your browser; large sets may slow down.)</span>
+          <button class="btn ghost small" id="clearPhotos">🗑️ Clear All</button>
+          <span class="muted">Photos are compressed and stored locally</span>
         </div>
         <div class="gallery" id="gallery"></div>
       </div>
 
       <!-- Sign-off -->
       <div class="card">
-        <h2>Sign-Off</h2>
+        <h2>Report Sign-Off</h2>
         <div class="row">
           <div style="grid-column:span 4">
-            <label for="preparedBy">Prepared By</label>
-            <input id="preparedBy" placeholder="Your name" />
+            <label for="preparedBy">Prepared By *</label>
+            <input id="preparedBy" placeholder="Your full name" required />
           </div>
           <div style="grid-column:span 4">
             <label for="title">Title</label>
-            <input id="title" placeholder="e.g., Superintendent" />
+            <input id="title" placeholder="Superintendent" />
           </div>
           <div style="grid-column:span 4">
-            <label for="preparedAt">Prepared At (time)</label>
+            <label for="preparedAt">Time Prepared</label>
             <input id="preparedAt" type="time" />
           </div>
         </div>
@@ -455,242 +829,420 @@
 
       <!-- History -->
       <div class="card">
-        <h2>Saved Reports (this browser)</h2>
+        <h2>Saved Reports</h2>
         <div class="tools">
-          <button class="btn warn" id="wipeAll">Delete All Drafts</button>
-          <span class="muted">(Use Export JSON first if you want a backup!)</span>
+          <button class="btn warn small" id="wipeAll">🗑️ Delete All Drafts</button>
+          <span class="muted">Reports saved in your browser. Export JSON for backup.</span>
         </div>
         <div id="history"></div>
       </div>
     </section>
   </div>
 
-  <!-- Error toast -->
+  <!-- Main Application Logic -->
   <script>
-    window.addEventListener('error', function(e){
-      var msg = (e && e.message) ? e.message : 'Unknown script error';
-      var t = document.createElement('div');
-      t.textContent = 'Script error: ' + msg;
-      t.style.position='fixed';t.style.left='16px';t.style.bottom='16px';
-      t.style.padding='8px 12px';t.style.background='#b91c1c';t.style.color='#fff';
-      t.style.borderRadius='8px';t.style.zIndex=9999;
-      document.body.appendChild(t); setTimeout(function(){t.remove();}, 4000);
-    });
-  </script>
+  (function(){
+    'use strict';
+    
+    // Utility Functions
+    function $(s, r){ return (r||document).querySelector(s); }
+    function $$(s, r){ return Array.prototype.slice.call((r||document).querySelectorAll(s)); }
+    
+    var STORAGE_KEY = 'dailyReportDrafts_v2';
+    var currentId = null;
+    var autoSaveTimer = null;
+    var hasUnsavedChanges = false;
 
-  <!-- Main JS (ES5-friendly) -->
-  <script>
-  function $(s, r){ return (r||document).querySelector(s); }
-  function $$(s, r){ return Array.prototype.slice.call((r||document).querySelectorAll(s)); }
-  var STORAGE_KEY = 'dailyReportDrafts_v1';
-  var currentId = null;
-
-  function uid(){ return Math.random().toString(36).slice(2) + Date.now().toString(36); }
-  function getDrafts(){ try{ return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }catch(e){ return []; } }
-  function setDrafts(arr){ localStorage.setItem(STORAGE_KEY, JSON.stringify(arr)); }
-  function escapeHtml(s){ return String(s).replace(/[&<>"']/g, function(m){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[m]; }); }
-
-  function inputForCell(idx, val, tableSel){
-    var numberCol = (tableSel==='#laborTable' && idx===3) || (tableSel==='#equipTable' && idx===2);
-    var notesCol =
-      (tableSel==='#laborTable' && idx===6) ||
-      (tableSel==='#deliveryTable' && idx===4) ||
-      (tableSel==='#inspTable' && idx===4) ||
-      (tableSel==='#equipTable' && idx===4);
-    if (notesCol) {
-      var v = val ? escapeHtml(val) : '';
-      return '<textarea class="grow">'+v+'</textarea>';
+    function uid(){ return Math.random().toString(36).slice(2) + Date.now().toString(36); }
+    function getDrafts(){ 
+      try{ return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
+      catch(e){ return []; } 
     }
-    return '<input '+(numberCol? 'type="number" min="0"':'' )+' value="'+(val?escapeHtml(val):'')+'" />';
-  }
+    function setDrafts(arr){ localStorage.setItem(STORAGE_KEY, JSON.stringify(arr)); }
+    function escapeHtml(s){ 
+      return String(s).replace(/[&<>"']/g, function(m){ 
+        return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[m]; 
+      }); 
+    }
 
-  function addRow(tbody, cells){
-    if(!tbody) return;
-    var tr = document.createElement('tr');
-    tr.innerHTML = cells.map(function(c){ return '<td>'+c+'</td>'; }).join('') + '<td><button class="btn ghost" data-remove>✕</button></td>';
-    tbody.appendChild(tr);
-    $$('.grow', tr).forEach(autoGrow);
-    updateKPIs();
-  }
+    // Toast Notification System
+    function showToast(message, type){
+      var existing = $('.toast');
+      if(existing) existing.remove();
+      
+      var toast = document.createElement('div');
+      toast.className = 'toast ' + (type || '');
+      toast.textContent = message;
+      document.body.appendChild(toast);
+      
+      setTimeout(function(){ toast.remove(); }, 3000);
+    }
 
-  function tableToJSON(sel){
-    var rows = $$(sel+' tbody tr');
-    return rows.map(function(tr){
-      return Array.prototype.slice.call(tr.querySelectorAll('td')).slice(0,-1).map(function(td){
-        var input = td.querySelector('input,textarea,select');
-        return input ? input.value : td.textContent;
+    // Image Compression
+    function compressImage(file, maxWidth, quality, callback){
+      var reader = new FileReader();
+      reader.onload = function(e){
+        var img = new Image();
+        img.onload = function(){
+          var canvas = document.createElement('canvas');
+          var ctx = canvas.getContext('2d');
+          
+          var width = img.width;
+          var height = img.height;
+          
+          if(width > maxWidth){
+            height = (height * maxWidth) / width;
+            width = maxWidth;
+          }
+          
+          canvas.width = width;
+          canvas.height = height;
+          ctx.drawImage(img, 0, 0, width, height);
+          
+          callback(canvas.toDataURL('image/jpeg', quality));
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // Table Input Helper
+    function inputForCell(idx, val, tableSel){
+      var numberCol = (tableSel==='#laborTable' && idx===3) || (tableSel==='#equipTable' && idx===2);
+      var timeCol = (tableSel==='#laborTable' && (idx===4 || idx===5)) || (tableSel==='#deliveryTable' && idx===0);
+      var notesCol =
+        (tableSel==='#laborTable' && idx===6) ||
+        (tableSel==='#deliveryTable' && idx===4) ||
+        (tableSel==='#inspTable' && idx===4) ||
+        (tableSel==='#equipTable' && idx===4);
+      
+      if (notesCol) {
+        var v = val ? escapeHtml(val) : '';
+        return '<textarea class="grow">'+v+'</textarea>';
+      }
+      
+      if(timeCol){
+        return '<input type="time" value="'+(val?escapeHtml(val):'')+'" />';
+      }
+      
+      return '<input '+(numberCol? 'type="number" min="0"':'' )+' value="'+(val?escapeHtml(val):'')+'" />';
+    }
+
+    function addRow(tbody, cells){
+      if(!tbody) return;
+      var tr = document.createElement('tr');
+      tr.innerHTML = cells.map(function(c){ return '<td>'+c+'</td>'; }).join('') + 
+        '<td><button class="btn ghost small" data-remove title="Remove">✕</button></td>';
+      tbody.appendChild(tr);
+      $$('.grow', tr).forEach(autoGrow);
+      updateKPIs();
+      markUnsaved();
+    }
+
+    function tableToJSON(sel){
+      var rows = $$(sel+' tbody tr');
+      return rows.map(function(tr){
+        return Array.prototype.slice.call(tr.querySelectorAll('td')).slice(0,-1).map(function(td){
+          var input = td.querySelector('input,textarea,select');
+          return input ? input.value : td.textContent;
+        });
       });
-    });
-  }
-  function jsonToTable(sel, rows){
-    var tbody = $(sel+' tbody'); if(!tbody) return;
-    tbody.innerHTML='';
-    rows.forEach(function(r){
-      addRow(tbody, r.map(function(v, idx){ return inputForCell(idx, v, sel); }));
-    });
-  }
-
-  function getForm(){
-    var labor = tableToJSON('#laborTable');
-    var deliveries = tableToJSON('#deliveryTable');
-    var inspections = tableToJSON('#inspTable');
-    var equipment = tableToJSON('#equipTable');
-    var photos = $$('#gallery img').map(function(img){ return img.src; });
-    return {
-      id: currentId || uid(),
-      date: $('#date') ? $('#date').value : '',
-      project: $('#project') ? $('#project').value : '',
-      customProject: $('#customProject') ? $('#customProject').value : '',
-      weather: $('#weather') ? $('#weather').value : '',
-      tempRange: $('#tempRange') ? $('#tempRange').value : '',
-      precip: $('#precip') ? $('#precip').value : '',
-      wind: $('#wind') ? $('#wind').value : '',
-      workPerformed: $('#workPerformed') ? $('#workPerformed').value : '',
-      safetyObservations: $('#safetyObservations') ? $('#safetyObservations').value : '',
-      incidents: $('#incidents') ? $('#incidents').value : '',
-      delays: $('#delays') ? $('#delays').value : '',
-      preparedBy: $('#preparedBy') ? $('#preparedBy').value : '',
-      title: $('#title') ? $('#title').value : '',
-      preparedAt: $('#preparedAt') ? $('#preparedAt').value : '',
-      labor: labor, deliveries: deliveries, inspections: inspections, equipment: equipment, photos: photos,
-      savedAt: new Date().toISOString()
-    };
-  }
-
-  function setForm(data){
-    var map = [
-      ['#date','date'],['#project','project'],['#customProject','customProject'],
-      ['#weather','weather'],['#tempRange','tempRange'],['#precip','precip'],['#wind','wind'],
-      ['#workPerformed','workPerformed'],['#safetyObservations','safetyObservations'],
-      ['#incidents','incidents'],['#delays','delays'],['#preparedBy','preparedBy'],
-      ['#title','title'],['#preparedAt','preparedAt']
-    ];
-    map.forEach(function(pair){
-      var sel = pair[0], key = pair[1];
-      if($(sel)) $(sel).value = data[key] || '';
-    });
-    jsonToTable('#laborTable', data.labor||[]);
-    jsonToTable('#deliveryTable', data.deliveries||[]);
-    jsonToTable('#inspTable', data.inspections||[]);
-    jsonToTable('#equipTable', data.equipment||[]);
-    if($('#gallery')) $('#gallery').innerHTML = '';
-    (data.photos||[]).forEach(function(src){ addPhotoToGallery(src); });
-    updateKPIs();
-  }
-
-  function addPhotoToGallery(src){
-    var img = document.createElement('img');
-    img.src = src; if($('#gallery')) $('#gallery').appendChild(img);
-  }
-
-  function updateKPIs(){
-    var labor = tableToJSON('#laborTable');
-    var totalCrew = labor.reduce(function(sum,row){ return sum + (parseInt(row[3]||0,10)||0); }, 0);
-    if($('#kpiCrew')) $('#kpiCrew').textContent = totalCrew;
-    if($('#kpiVendors')) $('#kpiVendors').textContent = (function(){
-      var set = {}; labor.forEach(function(r){ if(r[0]) set[r[0]] = 1; }); return Object.keys(set).length || 0;
-    })();
-    if($('#kpiIssues')) $('#kpiIssues').textContent = ($('#delays') && $('#delays').value.trim() ? 1 : 0) + ($('#incidents') && $('#incidents').value.trim()?1:0);
-    if($('#kpiInsp')) $('#kpiInsp').textContent = tableToJSON('#inspTable').length;
-  }
-
-  function autoGrow(el){ if (!el) return; el.style.height='auto'; el.style.height=(el.scrollHeight+2)+'px'; }
-
-  function saveCurrentDraft(){
-    var draft = getForm();
-    var ds = getDrafts();
-    var i = ds.findIndex(function(d){ return d.id === draft.id; });
-    if(i>=0) ds[i] = draft; else ds.push(draft);
-    setDrafts(ds); currentId = draft.id;
-    if(window.renderHistory) window.renderHistory();
-  }
-
-  /* helpers for history buttons */
-  function loadDraft(id){
-    var drafts = getDrafts();
-    var d = drafts.find(function(x){ return x.id===id; });
-    if(!d) return;
-    currentId = id;
-    setForm(d);
-  }
-  function deleteDraft(id){
-    var remain = getDrafts().filter(function(x){ return x.id!==id; });
-    setDrafts(remain);
-    if(currentId===id){ currentId=null; }
-    if (window.renderHistory) window.renderHistory();
-  }
-
-  document.addEventListener('input', function(e){
-    var el = e.target;
-    if (el && el.classList && el.classList.contains('grow')) autoGrow(el);
-    if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT')) updateKPIs();
-  });
-
-  document.addEventListener('DOMContentLoaded', function(){
-    function seed(){
-      addRow($('#laborTable tbody'), [
-        inputForCell(0,'' ,'#laborTable'),
-        inputForCell(1,'' ,'#laborTable'),
-        inputForCell(2,'' ,'#laborTable'),
-        inputForCell(3,'' ,'#laborTable'),
-        inputForCell(4,'' ,'#laborTable'),
-        inputForCell(5,'' ,'#laborTable'),
-        inputForCell(6,'' ,'#laborTable')
-      ]);
-      addRow($('#deliveryTable tbody'), [
-        inputForCell(0,'' ,'#deliveryTable'),
-        inputForCell(1,'' ,'#deliveryTable'),
-        inputForCell(2,'' ,'#deliveryTable'),
-        inputForCell(3,'' ,'#deliveryTable'),
-        inputForCell(4,'' ,'#deliveryTable'),
-        inputForCell(5,'' ,'#deliveryTable')
-      ]);
-      addRow($('#inspTable tbody'), [
-        inputForCell(0,'' ,'#inspTable'),
-        inputForCell(1,'' ,'#inspTable'),
-        inputForCell(2,'' ,'#inspTable'),
-        inputForCell(3,'' ,'#inspTable'),
-        inputForCell(4,'' ,'#inspTable')
-      ]);
-      addRow($('#equipTable tbody'), [
-        inputForCell(0,'' ,'#equipTable'),
-        inputForCell(1,'' ,'#equipTable'),
-        inputForCell(2,'' ,'#equipTable'),
-        inputForCell(3,'' ,'#equipTable'),
-        inputForCell(4,'' ,'#equipTable')
-      ]);
     }
+    
+    function jsonToTable(sel, rows){
+      var tbody = $(sel+' tbody'); if(!tbody) return;
+      tbody.innerHTML='';
+      rows.forEach(function(r){
+        addRow(tbody, r.map(function(v, idx){ return inputForCell(idx, v, sel); }));
+      });
+    }
+
+    function getForm(){
+      var labor = tableToJSON('#laborTable');
+      var deliveries = tableToJSON('#deliveryTable');
+      var inspections = tableToJSON('#inspTable');
+      var equipment = tableToJSON('#equipTable');
+      var photos = $$('#gallery .photo-item img').map(function(img){ return img.src; });
+      
+      return {
+        id: currentId || uid(),
+        date: $('#date') ? $('#date').value : '',
+        project: $('#project') ? $('#project').value : '',
+        customProject: $('#customProject') ? $('#customProject').value : '',
+        weather: $('#weather') ? $('#weather').value : '',
+        tempRange: $('#tempRange') ? $('#tempRange').value : '',
+        precip: $('#precip') ? $('#precip').value : '',
+        wind: $('#wind') ? $('#wind').value : '',
+        workPerformed: $('#workPerformed') ? $('#workPerformed').value : '',
+        safetyObservations: $('#safetyObservations') ? $('#safetyObservations').value : '',
+        incidents: $('#incidents') ? $('#incidents').value : '',
+        delays: $('#delays') ? $('#delays').value : '',
+        preparedBy: $('#preparedBy') ? $('#preparedBy').value : '',
+        title: $('#title') ? $('#title').value : '',
+        preparedAt: $('#preparedAt') ? $('#preparedAt').value : '',
+        labor: labor, 
+        deliveries: deliveries, 
+        inspections: inspections, 
+        equipment: equipment, 
+        photos: photos,
+        savedAt: new Date().toISOString()
+      };
+    }
+
+    function setForm(data){
+      var map = [
+        ['#date','date'],['#project','project'],['#customProject','customProject'],
+        ['#weather','weather'],['#tempRange','tempRange'],['#precip','precip'],['#wind','wind'],
+        ['#workPerformed','workPerformed'],['#safetyObservations','safetyObservations'],
+        ['#incidents','incidents'],['#delays','delays'],['#preparedBy','preparedBy'],
+        ['#title','title'],['#preparedAt','preparedAt']
+      ];
+      map.forEach(function(pair){
+        var sel = pair[0], key = pair[1];
+        if($(sel)) $(sel).value = data[key] || '';
+      });
+      jsonToTable('#laborTable', data.labor||[]);
+      jsonToTable('#deliveryTable', data.deliveries||[]);
+      jsonToTable('#inspTable', data.inspections||[]);
+      jsonToTable('#equipTable', data.equipment||[]);
+      if($('#gallery')) $('#gallery').innerHTML = '';
+      (data.photos||[]).forEach(function(src){ addPhotoToGallery(src); });
+      updateKPIs();
+      hasUnsavedChanges = false;
+      updateSaveStatus('saved');
+    }
+
+    function addPhotoToGallery(src){
+      if(!$('#gallery')) return;
+      var item = document.createElement('div');
+      item.className = 'photo-item';
+      item.innerHTML = '<img src="'+src+'" alt="Site photo" />' +
+        '<button class="remove-photo" data-remove-photo>✕</button>';
+      $('#gallery').appendChild(item);
+    }
+
+    function updateKPIs(){
+      var labor = tableToJSON('#laborTable');
+      var totalCrew = labor.reduce(function(sum,row){ 
+        return sum + (parseInt(row[3]||0,10)||0); 
+      }, 0);
+      if($('#kpiCrew')) $('#kpiCrew').textContent = totalCrew;
+      
+      if($('#kpiVendors')) $('#kpiVendors').textContent = (function(){
+        var set = {}; 
+        labor.forEach(function(r){ if(r[0]) set[r[0]] = 1; }); 
+        return Object.keys(set).length || 0;
+      })();
+      
+      if($('#kpiIssues')){
+        var issues = 0;
+        if($('#delays') && $('#delays').value.trim()) issues++;
+        if($('#incidents') && $('#incidents').value.trim() && $('#incidents').value.trim().toLowerCase() !== 'n/a') issues++;
+        $('#kpiIssues').textContent = issues;
+      }
+      
+      if($('#kpiInsp')) $('#kpiInsp').textContent = tableToJSON('#inspTable').length;
+    }
+
+    function autoGrow(el){ 
+      if (!el) return;
+      if(!el.value || el.value.trim() === ''){
+        el.style.height = '38px';
+        return;
+      }
+      el.style.height='auto'; 
+      el.style.height=(el.scrollHeight+2)+'px'; 
+    }
+
+    function markUnsaved(){
+      hasUnsavedChanges = true;
+      updateSaveStatus('unsaved');
+      scheduleAutoSave();
+    }
+
+    function updateSaveStatus(status){
+      var statusEl = $('#saveStatus');
+      var textEl = $('#saveText');
+      if(!statusEl || !textEl) return;
+      
+      statusEl.className = 'save-status';
+      
+      if(status === 'saving'){
+        statusEl.classList.add('saving');
+        textEl.textContent = 'Saving...';
+      } else if(status === 'saved'){
+        statusEl.classList.add('saved');
+        textEl.textContent = 'Saved';
+        setTimeout(function(){
+          if(statusEl.classList.contains('saved')){
+            statusEl.className = 'save-status';
+            textEl.textContent = 'Ready';
+          }
+        }, 2000);
+      } else {
+        textEl.textContent = 'Unsaved';
+      }
+    }
+
+    function scheduleAutoSave(){
+      if(autoSaveTimer) clearTimeout(autoSaveTimer);
+      autoSaveTimer = setTimeout(function(){
+        saveCurrentDraft(true);
+      }, 3000); // Auto-save after 3 seconds of inactivity
+    }
+
+    function saveCurrentDraft(isAutoSave){
+      updateSaveStatus('saving');
+      
+      setTimeout(function(){
+        var draft = getForm();
+        var ds = getDrafts();
+        var i = ds.findIndex(function(d){ return d.id === draft.id; });
+        if(i>=0) ds[i] = draft; else ds.push(draft);
+        setDrafts(ds); 
+        currentId = draft.id;
+        hasUnsavedChanges = false;
+        updateSaveStatus('saved');
+        
+        if(!isAutoSave){
+          showToast('Report saved successfully', 'success');
+        }
+        
+        if(window.renderHistory) window.renderHistory();
+      }, 300);
+    }
+
+    function loadDraft(id){
+      var drafts = getDrafts();
+      var d = drafts.find(function(x){ return x.id===id; });
+      if(!d) return;
+      currentId = id;
+      setForm(d);
+      showToast('Report loaded', 'success');
+    }
+    
+    function deleteDraft(id){
+      var remain = getDrafts().filter(function(x){ return x.id!==id; });
+      setDrafts(remain);
+      if(currentId===id){ currentId=null; }
+      if (window.renderHistory) window.renderHistory();
+      showToast('Report deleted', '');
+    }
+
+    function copyPreviousReport(){
+      var drafts = getDrafts().sort(function(a,b){ 
+        return (b.date||'').localeCompare(a.date||''); 
+      });
+      
+      if(!drafts.length){
+        showToast('No previous reports found', 'error');
+        return;
+      }
+      
+      var prev = drafts[0];
+      var newReport = JSON.parse(JSON.stringify(prev));
+      
+      // Update to today
+      var today = new Date();
+      newReport.id = uid();
+      newReport.date = today.toISOString().split('T')[0];
+      newReport.preparedAt = today.toTimeString().slice(0,5);
+      newReport.workPerformed = '';
+      newReport.safetyObservations = '';
+      newReport.incidents = '';
+      newReport.delays = '';
+      newReport.photos = [];
+      newReport.deliveries = [];
+      newReport.inspections = [];
+      
+      // Keep labor, equipment, weather template
+      currentId = newReport.id;
+      setForm(newReport);
+      showToast('Previous report copied as template', 'success');
+    }
+
+    function validateForm(){
+      var errors = [];
+      
+      if(!$('#date').value) errors.push('Date is required');
+      if(!$('#project').value) errors.push('Project is required');
+      if($('#project').value === 'custom' && !$('#customProject').value){
+        errors.push('Custom project name is required');
+      }
+      if(!$('#preparedBy').value) errors.push('Prepared by is required');
+      
+      return errors;
+    }
+
+    // Event Handlers
+    document.addEventListener('input', function(e){
+      var el = e.target;
+      if (el && el.classList && el.classList.contains('grow')) autoGrow(el);
+      if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT')) {
+        updateKPIs();
+        markUnsaved();
+      }
+    });
 
     document.addEventListener('click', function(e){
-      var btn = e.target.closest ? e.target.closest('button') : null; if (!btn) return;
+      var btn = e.target.closest ? e.target.closest('button') : null;
+      if (!btn) return;
 
       if (btn.hasAttribute('data-remove')) {
-        var row = btn.closest && btn.closest('tr'); if(row) row.parentNode.removeChild(row);
-        updateKPIs(); return;
+        var row = btn.closest && btn.closest('tr'); 
+        if(row) row.parentNode.removeChild(row);
+        updateKPIs(); 
+        markUnsaved();
+        return;
+      }
+
+      if(btn.hasAttribute('data-remove-photo')){
+        var item = btn.closest('.photo-item');
+        if(item) item.remove();
+        markUnsaved();
+        return;
       }
 
       switch (btn.id) {
-        case 'saveBtn':
-          saveCurrentDraft();
+        case 'copyPrevBtn':
+          if(confirm('Copy previous report as a template? This will replace current unsaved changes.')){
+            copyPreviousReport();
+          }
           break;
 
         case 'newBtn':
-          if (confirm('Clear the form for a new report?')) { currentId = null; setForm({}); seed(); }
+          if (hasUnsavedChanges && !confirm('You have unsaved changes. Continue?')) return;
+          if (confirm('Start a new report? This will clear the current form.')) { 
+            currentId = null; 
+            setForm({}); 
+            seed(); 
+            showToast('New report started', '');
+          }
           break;
 
         case 'exportBtn':
+          var errors = validateForm();
+          if(errors.length){
+            showToast(errors[0], 'error');
+            return;
+          }
           var data = getForm();
           var blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
           var a = document.createElement('a');
           a.href = URL.createObjectURL(blob);
-          a.download = 'daily-report_'+(data.date||'undated')+'.json';
+          a.download = 'daily-report_'+(data.date||'undated')+'_'+(data.customProject||data.project||'project').replace(/[^a-z0-9]/gi,'_')+'.json';
           a.click();
+          showToast('Report exported', 'success');
           break;
 
         case 'printBtn':
-          // Auto-save BEFORE opening print dialog
-          saveCurrentDraft();
-          setTimeout(function(){ window.print(); }, 0);
+          var errors = validateForm();
+          if(errors.length){
+            showToast(errors[0], 'error');
+            return;
+          }
+          saveCurrentDraft(false);
+          setTimeout(function(){ window.print(); }, 100);
           break;
 
         case 'addLabor':
@@ -706,7 +1258,11 @@
           break;
 
         case 'clearLabor':
-          if(confirm('Clear labor table?')) { $('#laborTable tbody').innerHTML=''; updateKPIs(); }
+          if(confirm('Clear all labor entries?')) { 
+            $('#laborTable tbody').innerHTML=''; 
+            updateKPIs(); 
+            markUnsaved();
+          }
           break;
 
         case 'addDelivery':
@@ -721,7 +1277,10 @@
           break;
 
         case 'clearDelivery':
-          if(confirm('Clear deliveries?')) { $('#deliveryTable tbody').innerHTML=''; updateKPIs(); }
+          if(confirm('Clear all deliveries?')) { 
+            $('#deliveryTable tbody').innerHTML=''; 
+            markUnsaved();
+          }
           break;
 
         case 'addInsp':
@@ -735,7 +1294,11 @@
           break;
 
         case 'clearInsp':
-          if(confirm('Clear inspections?')) { $('#inspTable tbody').innerHTML=''; updateKPIs(); }
+          if(confirm('Clear all inspections?')) { 
+            $('#inspTable tbody').innerHTML=''; 
+            updateKPIs();
+            markUnsaved();
+          }
           break;
 
         case 'addEquip':
@@ -749,64 +1312,177 @@
           break;
 
         case 'clearEquip':
-          if(confirm('Clear equipment?')) { $('#equipTable tbody').innerHTML=''; updateKPIs(); }
+          if(confirm('Clear all equipment?')) { 
+            $('#equipTable tbody').innerHTML=''; 
+            markUnsaved();
+          }
+          break;
+
+        case 'wipeAll':
+          if(confirm('Delete ALL saved reports? This cannot be undone!')) { 
+            localStorage.removeItem(STORAGE_KEY); 
+            var h = $('#history'); 
+            if(h) h.innerHTML='<p class="muted">No drafts saved yet.</p>';
+            showToast('All reports deleted', '');
+          }
           break;
 
         default:
           if (btn.dataset && btn.dataset.load) loadDraft(btn.dataset.load);
-          if (btn.dataset && btn.dataset.del)  { if (confirm('Delete this draft?')) deleteDraft(btn.dataset.del); }
+          if (btn.dataset && btn.dataset.del) { 
+            if (confirm('Delete this report?')) deleteDraft(btn.dataset.del); 
+          }
       }
     });
 
-    function renderHistory(){
-      var drafts = getDrafts().sort(function(a,b){ return (b.date||'').localeCompare(a.date||''); });
-      var el = $('#history'); if(!el){ return; }
-      if(!drafts.length){ el.innerHTML = '<p class="muted">No drafts saved yet.</p>'; return; }
-      el.innerHTML = drafts.map(function(d){
-        var title = (d.date||'—')+' · '+(d.customProject||d.project||'—');
-        return '<div style="display:flex;gap:10px;align-items:center;margin:8px 0;padding:10px;border:1px solid var(--border-dark);border-radius:10px;background:#fff">'+
-          '<div style="flex:1 1 auto">'+title+'</div>'+
-          '<button class="btn" data-load="'+d.id+'">Open</button>'+
-          '<button class="btn ghost danger" data-del="'+d.id+'">Delete</button>'+
-        '</div>';
-      }).join('');
-    }
-    window.renderHistory = renderHistory;
+    // Initialize on load
+    document.addEventListener('DOMContentLoaded', function(){
+      function seed(){
+        // Seed one row in each table
+        addRow($('#laborTable tbody'), [
+          inputForCell(0,'' ,'#laborTable'),
+          inputForCell(1,'' ,'#laborTable'),
+          inputForCell(2,'' ,'#laborTable'),
+          inputForCell(3,'' ,'#laborTable'),
+          inputForCell(4,'' ,'#laborTable'),
+          inputForCell(5,'' ,'#laborTable'),
+          inputForCell(6,'' ,'#laborTable')
+        ]);
+      }
+      window.seed = seed;
 
-    var today = new Date();
-    if($('#date')) $('#date').valueAsDate = today;
-    if($('#preparedAt')) $('#preparedAt').value = today.toTimeString().slice(0,5);
-    seed();
-    renderHistory();
-    updateKPIs();
+      function renderHistory(){
+        var drafts = getDrafts().sort(function(a,b){ 
+          return (b.date||'').localeCompare(a.date||''); 
+        });
+        var el = $('#history'); 
+        if(!el) return;
+        
+        if(!drafts.length){ 
+          el.innerHTML = '<p class="muted">No reports saved yet. Your reports will appear here.</p>'; 
+          return; 
+        }
+        
+        el.innerHTML = drafts.map(function(d){
+          var projectName = d.customProject || d.project || 'Unnamed Project';
+          var date = d.date || 'No date';
+          var saved = d.savedAt ? new Date(d.savedAt).toLocaleString() : '';
+          
+          return '<div class="history-item">'+
+            '<div class="info">'+
+              '<div class="title">'+escapeHtml(projectName)+'</div>'+
+              '<div class="meta">'+escapeHtml(date)+' • Saved: '+saved+'</div>'+
+            '</div>'+
+            '<button class="btn small" data-load="'+d.id+'">Open</button>'+
+            '<button class="btn ghost small danger" data-del="'+d.id+'">Delete</button>'+
+          '</div>';
+        }).join('');
+      }
+      window.renderHistory = renderHistory;
 
-    // Also save on native print triggers
-    if (window.addEventListener) {
-      window.addEventListener('beforeprint', saveCurrentDraft);
-    }
-  });
+      // Set today's date and time
+      var today = new Date();
+      if($('#date')) $('#date').valueAsDate = today;
+      if($('#preparedAt')) $('#preparedAt').value = today.toTimeString().slice(0,5);
+      
+      seed();
+      renderHistory();
+      updateKPIs();
+      
+      // Warn on leaving with unsaved changes
+      window.addEventListener('beforeunload', function(e){
+        if(hasUnsavedChanges){
+          e.preventDefault();
+          e.returnValue = '';
+          return '';
+        }
+      });
 
-  // photos
-  var photoInput = $('#photoInput');
-  if(photoInput){
-    photoInput.addEventListener('change', function(e){
-      var files = Array.prototype.slice.call(e.target.files||[]);
-      files.forEach(function(f){
-        var r = new FileReader();
-        r.onload = function(){ var img = document.createElement('img'); img.src = r.result; if($('#gallery')) $('#gallery').appendChild(img); };
-        r.readAsDataURL(f);
+      // Auto-save before print
+      window.addEventListener('beforeprint', function(){
+        saveCurrentDraft(true);
+      });
+
+      // Keyboard shortcuts
+      document.addEventListener('keydown', function(e){
+        // Ctrl/Cmd + S = Save
+        if((e.ctrlKey || e.metaKey) && e.key === 's'){
+          e.preventDefault();
+          saveCurrentDraft(false);
+        }
+        // Ctrl/Cmd + P = Print
+        if((e.ctrlKey || e.metaKey) && e.key === 'p'){
+          e.preventDefault();
+          var errors = validateForm();
+          if(!errors.length){
+            saveCurrentDraft(false);
+            setTimeout(function(){ window.print(); }, 100);
+          } else {
+            showToast(errors[0], 'error');
+          }
+        }
       });
     });
-  }
-  var clearPhotosBtn = $('#clearPhotos');
-  if(clearPhotosBtn){
-    clearPhotosBtn.addEventListener('click', function(){ if(confirm('Clear photos?')) $('#gallery').innerHTML=''; });
-  }
-  var wipeAllBtn = $('#wipeAll');
-  if(wipeAllBtn){
-    wipeAllBtn.addEventListener('click', function(){ if(confirm('Delete ALL drafts saved in this browser?')) { localStorage.removeItem(STORAGE_KEY); var h = document.querySelector('#history'); if(h) h.innerHTML=''; }});
-  }
+
+    // Photo handling with compression
+    var photoInput = $('#photoInput');
+    if(photoInput){
+      photoInput.addEventListener('change', function(e){
+        var files = Array.prototype.slice.call(e.target.files||[]);
+        if(!files.length) return;
+        
+        showToast('Compressing '+files.length+' photo(s)...', '');
+        
+        var processed = 0;
+        files.forEach(function(f){
+          compressImage(f, 1200, 0.85, function(compressed){
+            addPhotoToGallery(compressed);
+            processed++;
+            if(processed === files.length){
+              showToast(files.length+' photo(s) added', 'success');
+              markUnsaved();
+            }
+          });
+        });
+        photoInput.value = '';
+      });
+    }
+
+    var clearPhotosBtn = $('#clearPhotos');
+    if(clearPhotosBtn){
+      clearPhotosBtn.addEventListener('click', function(){ 
+        if(confirm('Remove all photos from this report?')) {
+          $('#gallery').innerHTML=''; 
+          markUnsaved();
+          showToast('Photos cleared', '');
+        }
+      });
+    }
+
+    // Import JSON
+    var importFile = $('#importFile');
+    if(importFile){
+      importFile.addEventListener('change', function(e){
+        var file = e.target.files[0];
+        if(!file) return;
+        
+        var reader = new FileReader();
+        reader.onload = function(ev){
+          try{
+            var data = JSON.parse(ev.target.result);
+            currentId = data.id || uid();
+            setForm(data);
+            showToast('Report imported successfully', 'success');
+          } catch(err){
+            showToast('Error importing file', 'error');
+          }
+        };
+        reader.readAsText(file);
+        importFile.value = '';
+      });
+    }
+
+  })();
   </script>
 </body>
 </html>
-
