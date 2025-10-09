@@ -13,6 +13,7 @@
     --blue:#2563eb; --blue2:#3b82f6; --muted:#6b7280;
     --card:#ffffff; --border:#e5e7eb; --shadow:rgba(0,0,0,.07);
     --section:#0f172a; --sectionText:#fff;
+    --hint:#e2e8f0;
   }
   *{box-sizing:border-box}
   html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:'Inter',system-ui,Segoe UI,Roboto,Arial,sans-serif;}
@@ -23,7 +24,7 @@
   .brand h1{margin:0;font-size:1.35rem}
   .sub{color:var(--muted);font-weight:600}
   .bar{display:flex;gap:10px;flex-wrap:wrap}
-  .btn{appearance:none;border:1px solid transparent;background:var(--blue);color:#fff;padding:10px 14px;border-radius:10px;font-weight:700;cursor:pointer}
+  .btn{appearance:none;border:1px solid transparent;background:var(--blue);color:#fff;padding:10px 14px;border-radius:10px;font-weight:700;cursor:pointer;font-size:16px}
   .btn:hover{background:var(--blue2)}
   .ghost{background:transparent;border-color:var(--blue);color:var(--blue)}
   .ghost:hover{background:rgba(37,99,235,.08)}
@@ -35,9 +36,13 @@
   .grid2{display:grid;gap:14px}
   @media(min-width:860px){.grid2{grid-template-columns:1.1fr 1fr 1fr}}
 
+  /* Section grid */
   .section{margin-top:18px;border:1px solid var(--border);border-radius:14px;overflow:hidden}
-  .section .head{background:var(--section);color:var(--sectionText);padding:10px 14px;font-weight:800}
-  .rows{display:grid;grid-template-columns:1.2fr 2fr .9fr .9fr .6fr;gap:0;border-top:1px solid var(--border)}
+  .section .head{background:var(--section);color:var(--sectionText);padding:10px 14px;font-weight:800;display:flex;justify-content:space-between;align-items:center}
+  .swipe-hint{display:none;color:#334155;background:var(--hint);padding:4px 10px;border-radius:999px;font-size:.75rem}
+
+  .rows-wrap{overflow:auto}          /* <-- horizontal scroll on mobile */
+  .rows{display:grid;grid-template-columns:1.2fr 2fr .9fr .9fr .6fr;gap:0;border-top:1px solid var(--border);min-width:960px}
   .r{display:contents}
   .rows > div{border-top:1px solid var(--border)}
   .rows b{display:flex;align-items:center;padding:10px 12px;background:#f8fafc;border-right:1px solid var(--border);font-weight:700}
@@ -51,11 +56,20 @@
 
   footer{margin-top:20px;color:var(--muted);text-align:center}
 
+  /* Small screen tweaks */
+  @media(max-width:640px){
+    .brand h1{font-size:1.1rem}
+    .sub{font-size:.9rem}
+    .swipe-hint{display:inline-block}
+  }
+
+  /* Print */
   @media print{
     header .bar, .no-print{display:none !important}
     .card{box-shadow:none;border:1px solid #ddd;page-break-inside:avoid}
     body{background:#fff}
     a[href]:after{content:""}
+    .rows-wrap{overflow:visible}
   }
 </style>
 </head>
@@ -70,6 +84,7 @@
       </div>
     </div>
     <div class="bar no-export">
+      <a href="index.html" class="btn ghost">← Back to Home</a>
       <button class="btn" onclick="window.print()">Print</button>
       <button class="btn ghost" onclick="downloadPDF()">Download PDF</button>
       <button class="btn ghost" onclick="saveState()">Save</button>
@@ -82,7 +97,7 @@
     <div class="grid2">
       <div>
         <label>Project</label>
-        <input id="proj" placeholder="Comet Westgate">
+        <input id="proj" placeholder="Comet North Raleigh">
       </div>
       <div>
         <label>Building</label>
@@ -109,7 +124,7 @@
     </div>
   </section>
 
-  <!-- Section Builder -->
+  <!-- Sections get injected here -->
   <div id="sections"></div>
 
   <footer>© <span id="yy"></span> Comet Builders LLC</footer>
@@ -120,7 +135,7 @@
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 
 <script>
-  const KEY = 'punchlist_final_v1';
+  const KEY = 'punchlist_final_v2';
   document.getElementById('yy').textContent = new Date().getFullYear();
   document.getElementById('first').valueAsDate = new Date();
 
@@ -143,24 +158,29 @@
     ]}
   ];
 
-  // Build sections
+  // Build sections with mobile scroll wrappers + hint
   const container = document.getElementById('sections');
   SECTIONS.forEach((sec, si)=>{
     const shell = document.createElement('section');
     shell.className = 'section card';
     shell.innerHTML = `
-      <div class="head">${sec.title}</div>
-      <div class="rows">
-        <div class="th r">
-          <div>Item</div>
-          <div>Notes / Findings (wide)</div>
-          <div>Resp. Party</div>
-          <div>Completion Date</div>
-          <div>Init.</div>
+      <div class="head">
+        <span>${sec.title}</span>
+        <span class="swipe-hint">Swipe →</span>
+      </div>
+      <div class="rows-wrap">
+        <div class="rows">
+          <div class="th r">
+            <div>Item</div>
+            <div>Notes / Findings (wide)</div>
+            <div>Resp. Party</div>
+            <div>Completion Date</div>
+            <div>Init.</div>
+          </div>
         </div>
       </div>
     `;
-    const rows = shell.querySelector('.rows');
+    const rowsContainer = shell.querySelector('.rows');
     sec.rows.forEach((label, ri)=>{
       const r = document.createElement('div'); r.className = 'r';
       r.innerHTML = `
@@ -170,7 +190,7 @@
         <div class="cell"><input data-k="${si}-${ri}-date" type="date"></div>
         <div class="cell"><input data-k="${si}-${ri}-init" placeholder="__"></div>
       `;
-      rows.appendChild(r);
+      rowsContainer.appendChild(r);
     });
     container.appendChild(shell);
   });
@@ -188,8 +208,8 @@
     if(!st) return;
     setv('proj', st.meta?.proj||''); setv('bldg', st.meta?.bldg||''); setv('unit', st.meta?.unit||'');
     setv('first', st.meta?.first||''); setv('accept', st.meta?.accept||''); setv('rep', st.meta?.rep||'');
-    Object.entries(st.data||{}).forEach(([k,v])=>{
-      const el = document.querySelector(`[data-k="${k}"]`); if(el) el.value = v;
+    Object.entries(st.data||{}).forEach(([k,val])=>{
+      const el = document.querySelector(`[data-k="${k}"]`); if(el) el.value = val;
     });
   }
   const v=id=>document.getElementById(id).value;
@@ -222,6 +242,7 @@
     const doc = new jsPDF({orientation:'p', unit:'pt', format:'letter'});
     const el = document.getElementById('content');
 
+    // Capture full scroll width so wide tables render correctly
     const canvas = await html2canvas(el, {scale:2, useCORS:true, windowWidth: el.scrollWidth});
     const img = canvas.toDataURL('image/png');
 
@@ -246,7 +267,7 @@
     const date = (v('accept') || v('first') || new Date().toISOString().slice(0,10));
     const proj = (v('proj') || 'Project').replace(/[^\w-]+/g,'_');
     const bldg = (v('bldg') || 'Bldg').replace(/[^\w-]+/g,'_');
-    const unit = (v('unit') || 'Unit').replace(/[^\w-]+/g,'_');
+    const unit = (v('unit') || 'Unit').replace/[^\w-]+/g,'_';
     doc.save(`Final-Building-Walk—${proj}—${bldg}—${unit}—${date}.pdf`);
 
     document.body.classList.remove('exporting');
@@ -254,3 +275,4 @@
 </script>
 </body>
 </html>
+
