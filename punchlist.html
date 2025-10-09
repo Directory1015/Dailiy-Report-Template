@@ -2,8 +2,14 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <title>Comet — Initial Punchlist</title>
+
+<!-- iOS Specific Meta Tags -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Punchlist">
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
@@ -15,25 +21,77 @@
     --yellow:#fff7ae;
   }
   *{box-sizing:border-box}
-  html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:'Inter',system-ui,Segoe UI,Roboto,Arial,sans-serif;}
-  .wrap{max-width:1100px;margin:0 auto;padding:24px}
-  header{display:flex;align-items:center;justify-content:space-between;padding:8px 0 18px;border-bottom:1px solid var(--border)}
+  html{
+    -webkit-overflow-scrolling:touch;
+    -webkit-text-size-adjust:100%;
+  }
+  html,body{
+    margin:0;
+    padding:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Inter',system-ui,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Arial,sans-serif;
+  }
+  body{
+    padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+  .wrap{
+    max-width:1100px;
+    margin:0 auto;
+    padding:24px;
+    padding-bottom:calc(24px + env(safe-area-inset-bottom));
+  }
+  header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:8px 0 18px;
+    border-bottom:1px solid var(--border);
+    position:sticky;
+    top:0;
+    background:var(--bg);
+    z-index:10;
+  }
   .brand{display:flex;gap:12px;align-items:center}
   .brand svg{width:30px;height:30px}
   .brand h1{margin:0;font-size:1.35rem;letter-spacing:.2px}
   .sub{color:var(--muted);font-weight:600}
 
   .bar{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0 20px}
-  .btn{appearance:none;border:1px solid transparent;background:var(--blue);color:#fff;padding:10px 14px;
-       border-radius:10px;font-weight:700;text-decoration:none;cursor:pointer}
+  .btn{
+    appearance:none;
+    -webkit-appearance:none;
+    border:1px solid transparent;
+    background:var(--blue);
+    color:#fff;
+    padding:10px 14px;
+    border-radius:10px;
+    font-weight:700;
+    text-decoration:none;
+    cursor:pointer;
+    -webkit-tap-highlight-color:transparent;
+    touch-action:manipulation;
+    user-select:none;
+    -webkit-user-select:none;
+  }
   .btn:hover{background:var(--blue2)}
+  .btn:active{transform:scale(0.96)}
   .ghost{background:transparent;border-color:var(--blue);color:var(--blue)}
   .danger{background:#ef4444;border-color:#ef4444}
   .ghost:hover{background:rgba(37,99,235,.08)}
   .grid{display:grid;gap:16px}
   .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:18px;box-shadow:0 8px 22px var(--shadow)}
   label{font-weight:600;font-size:.95rem;color:#111827}
-  input, textarea, select{width:100%;padding:12px 12px;font-size:16px;border:1px solid var(--border);border-radius:10px;background:#fff}
+  input, textarea, select{
+    width:100%;
+    padding:12px 12px;
+    font-size:16px;
+    border:1px solid var(--border);
+    border-radius:10px;
+    background:#fff;
+    -webkit-appearance:none;
+    appearance:none;
+  }
   textarea{min-height:90px;resize:vertical}
 
   .two{display:grid;gap:14px}
@@ -41,19 +99,39 @@
   .three{display:grid;gap:14px}
   @media(min-width:900px){.three{grid-template-columns:1.1fr 1fr 1fr}}
 
-  .table-wrap{overflow:auto;border-radius:14px;border:1px solid var(--border);background:#fff}
+  .table-wrap{
+    overflow:auto;
+    border-radius:14px;
+    border:1px solid var(--border);
+    background:#fff;
+    -webkit-overflow-scrolling:touch;
+  }
   table{width:100%;border-collapse:separate;border-spacing:0;min-width:720px}
   thead th{position:sticky;top:0;background:#f1f5f9;border-bottom:1px solid var(--border);padding:10px 8px;text-align:left;font-size:.9rem}
   tbody td{border-top:1px solid var(--border);padding:0}
   tbody tr:first-child td{border-top:none}
-  .rownum{width:70px;text-align:center;color:#475569;font-weight:700;background:#f8fafc;border-right:1px solid var(--border);cursor:pointer}
-  .rownum small{display:block;font-weight:600;color:#64748b}
+  .rownum{
+    width:70px;
+    text-align:center;
+    color:#475569;
+    font-weight:700;
+    background:#f8fafc;
+    border-right:1px solid var(--border);
+    cursor:pointer;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .rownum small{display:block;font-weight:600;color:#64748b;font-size:10px}
   .cell input,.cell textarea{border:none;border-radius:0;width:100%;padding:12px 10px;font-size:16px}
   .cell textarea{min-height:48px}
   .hl{background:var(--yellow)}
   .tbar{display:flex;gap:10px;justify-content:flex-end;margin:10px 0}
 
-  footer{margin-top:20px;color:var(--muted);text-align:center}
+  footer{
+    margin-top:20px;
+    color:var(--muted);
+    text-align:center;
+    padding-bottom:env(safe-area-inset-bottom);
+  }
 
   /* Hide export controls during capture */
   body.exporting .no-export{display:none !important}
@@ -61,7 +139,7 @@
   /* Print Styles */
   @media print{
     header .bar, .tbar, .no-print{display:none !important}
-    body{background:#fff}
+    body{background:#fff;padding:0 !important}
     .wrap{padding:0}
     .card{box-shadow:none;border:1px solid #ddd;page-break-inside:avoid}
     thead th{background:#eaf0ff !important}
@@ -69,10 +147,93 @@
     .table-wrap{overflow:visible; border:none}
   }
 
-  /* Small-screen tweaks */
+  /* Mobile optimizations */
+  @media(max-width:900px){
+    .wrap{
+      padding:16px;
+      padding-bottom:calc(16px + env(safe-area-inset-bottom));
+    }
+    
+    header{
+      flex-direction:column;
+      align-items:flex-start;
+      gap:12px;
+      padding:12px 0 16px;
+      position:sticky;
+      top:0;
+      background:var(--bg);
+      z-index:10;
+      margin:0 -16px;
+      padding-left:16px;
+      padding-right:16px;
+    }
+    
+    .brand{gap:10px}
+    .brand svg{width:24px;height:24px}
+    .brand h1{font-size:1.2rem}
+    .sub{font-size:.9rem}
+    
+    .bar{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:8px;
+      width:100%;
+      margin:0;
+    }
+    
+    .btn{
+      padding:12px 14px;
+      min-height:48px;
+      font-size:14px;
+      width:100%;
+    }
+    
+    .card{
+      padding:16px;
+      border-radius:14px;
+    }
+    
+    .tbar{
+      flex-direction:column;
+    }
+    
+    .tbar .btn{
+      width:100%;
+    }
+    
+    .table-wrap{
+      margin-left:-16px;
+      margin-right:-16px;
+      border-radius:0;
+      border-left:none;
+      border-right:none;
+    }
+    
+    .rownum{
+      width:60px;
+      padding:8px 4px;
+    }
+    
+    .rownum small{font-size:9px}
+  }
+
   @media(max-width:640px){
     .brand h1{font-size:1.1rem}
-    .sub{font-size:.9rem}
+    .sub{font-size:.85rem}
+    
+    .three{
+      grid-template-columns:1fr;
+    }
+    
+    table{min-width:650px}
+  }
+
+  /* iPhone X and newer with notch */
+  @supports(padding:max(0px)){
+    body{
+      padding-left:max(0px, env(safe-area-inset-left));
+      padding-right:max(0px, env(safe-area-inset-right));
+    }
   }
 </style>
 </head>
@@ -87,9 +248,9 @@
       </div>
     </div>
     <div class="bar no-export">
-      <a href="index.html" class="btn ghost">← Back to Home</a>
+      <a href="index.html" class="btn ghost">← Home</a>
       <button class="btn" onclick="doPrint()">Print</button>
-      <button class="btn ghost" onclick="downloadPDF()">Download PDF</button>
+      <button class="btn ghost" onclick="downloadPDF()">PDF</button>
       <button class="btn ghost" onclick="saveState()">Save</button>
       <button class="btn ghost" onclick="loadState()">Load</button>
       <button class="btn danger" onclick="clearAll()">Clear</button>
@@ -244,6 +405,16 @@
   // Initialize
   applyState(JSON.parse(localStorage.getItem(KEY) || '{"rows": []}'));
 
+  // Prevent double-tap zoom on iOS
+  let lastTouchEnd = 0;
+  document.addEventListener('touchend', function(event) {
+    const now = Date.now();
+    if (now - lastTouchEnd <= 300) {
+      event.preventDefault();
+    }
+    lastTouchEnd = now;
+  }, false);
+
   /* ---------- PDF EXPORT ---------- */
   async function downloadPDF(){
     document.body.classList.add('exporting');
@@ -283,4 +454,3 @@
 </script>
 </body>
 </html>
-
