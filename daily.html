@@ -38,7 +38,10 @@
     }
 
     .top{display:flex;align-items:center;gap:14px;max-width:1100px;margin:0 auto;padding:14px 24px}
+    .brand{display:flex;align-items:center;gap:10px}
     .logo{width:42px;height:42px;border-radius:12px;background:#eef2ff;border:1px solid var(--border);display:grid;place-items:center;font-weight:800;color:#1e3a8a}
+    .titles{display:flex;flex-direction:column;line-height:1.1}
+    .brand-name{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#334155}
     h1{font-size:18px;margin:0}
     .actions{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
     button,.btn{
@@ -101,7 +104,7 @@
     /* Auto-growing Notes cells */
     td textarea.grow{min-height:42px;line-height:1.3;resize:vertical;overflow:hidden}
 
-    /* Responsive */
+    /* Responsive (existing) */
     @media (max-width:900px){
       .row{grid-template-columns:repeat(6,1fr)}
       .gallery{grid-template-columns:repeat(3,1fr)}
@@ -109,6 +112,58 @@
     @media (max-width:600px){
       .row{grid-template-columns:repeat(2,1fr)}
       .gallery{grid-template-columns:repeat(2,1fr)}
+    }
+
+    /* ===== Mobile compaction (phones) ===== */
+    @media (max-width: 600px){
+      header { box-shadow: 0 1px 6px rgba(0,0,0,.06); }
+      .top { padding: 8px 12px; gap: 10px; }
+      .logo { width: 28px; height: 28px; border-radius: 8px; font-size: 12px; }
+      .brand-name{ font-size: 10px; }
+      h1 { font-size: 14px; }
+
+      .actions { gap: 6px; }
+      button, .btn { 
+        padding: 6px 10px; 
+        font-size: 13px; 
+        border-radius: 8px; 
+        line-height: 1.15;
+      }
+
+      .wrap { padding: 12px; }
+      .grid { gap: 12px; }
+      .card { padding: 12px; border-radius: 12px; }
+      .card h2 { font-size: 15px; margin-bottom: 10px; }
+
+      label { font-size: 11px; }
+      input, select, textarea {
+        padding: 8px 10px;
+        font-size: 14px;
+        border-radius: 8px;
+      }
+      textarea { min-height: 90px; }
+      td textarea.grow { min-height: 36px; }
+
+      th, td { padding: 6px; font-size: 13px; }
+      th { white-space: nowrap; }
+      
+      .kpi { gap: 12px; }
+      .kpi .box { padding: 8px; border-radius: 10px; }
+      .box b { font-size: 18px; }
+
+      .gallery { grid-template-columns: repeat(2, 1fr); gap: 6px; }
+      .gallery img { height: 70px; border-radius: 8px; }
+    }
+
+    /* ===== Small tablets (optional, slightly tighter) ===== */
+    @media (min-width: 601px) and (max-width: 900px){
+      .top { padding: 10px 16px; }
+      .logo { width: 34px; height: 34px; }
+      h1 { font-size: 16px; }
+      button, .btn { padding: 8px 12px; font-size: 14px; }
+      .wrap { padding: 18px; }
+      .card { padding: 14px; }
+      th, td { padding: 7px; }
     }
 
     /* Print */
@@ -129,7 +184,7 @@
   <!-- Anti-stale updater (plain ES5; bump version when you deploy) -->
   <script>
     (function(){
-      var APP_VERSION = '2025-10-09-01'; // CHANGE when you deploy
+      var APP_VERSION = '2025-10-09-04'; // CHANGE when you deploy
       try {
         var stored = localStorage.getItem('app_version');
         if (stored !== APP_VERSION) {
@@ -160,8 +215,13 @@
 
   <header>
     <div class="top">
-      <div class="logo">DR</div>
-      <h1>Daily Reports</h1>
+      <div class="brand">
+        <div class="logo">DR</div>
+        <div class="titles">
+          <div class="brand-name">Comet Builders</div>
+          <h1>Daily Reports</h1>
+        </div>
+      </div>
       <div class="actions">
         <a class="btn ghost" href="index.html">Home</a>
         <button class="btn primary" id="saveBtn">Save Draft</button>
@@ -412,7 +472,7 @@
       var t = document.createElement('div');
       t.textContent = 'Script error: ' + msg;
       t.style.position='fixed';t.style.left='16px';t.style.bottom='16px';
-      t.style.padding='8px 12px';t.style.background='#b91c1c';t.style.color:'#fff';
+      t.style.padding='8px 12px';t.style.background='#b91c1c';t.style.color='#fff';
       t.style.borderRadius='8px';t.style.zIndex=9999;
       document.body.appendChild(t); setTimeout(function(){t.remove();}, 4000);
     });
@@ -721,10 +781,6 @@
     updateKPIs();
 
     // Also save on native print triggers
-    if (window.matchMedia) {
-      var beforePrint = window.matchMedia('print');
-      // Some browsers don't fire this reliably; keep the event below too.
-    }
     if (window.addEventListener) {
       window.addEventListener('beforeprint', saveCurrentDraft);
     }
